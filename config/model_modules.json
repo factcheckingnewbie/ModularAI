@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "id": "gpt2",
+      "name": "GPT-2 Model",
+      "path": "./ModularAI/models/gpt2/gpt2_model.py",
+      "description": "GPT-2 based AI model for text generation",
+      "version": "1.0.0",
+      "author": "ModularAI Team",
+      "non_blocking": true,
+      "multiple_sessions": true,
+      "capabilities": {
+        "text_io": true,
+        "structured_output": false,
+        "language_understanding": true
+      },
+      "requirements": {
+        "transformers": ">=4.0.0",
+        "python": ">=3.8.0"
+      },
+      "parameters": {
+        "max_response_tokens": 1000,
+        "temperature": 0.7,
+        "request_timeout": 30
+      }
+    }
+  ]
+}
