@@ -19,7 +19,8 @@ class Cli_Chat:
     """
     """
     
-    def __init__(self):
+#    def __init__(self):
+    def __init__(self, prompt_symbol: str = "> "):
         self.connected_models = {}
         self.active_model = None
         self.reader = None
@@ -27,7 +28,8 @@ class Cli_Chat:
         self.running = True
         self.command_history = []
         self.history_size = 100
-        self.prompt_symbol = "> "
+#        self.prompt_symbol = "> "
+        self.prompt_symbol = prompt_symbol
         self.tasks = set()
         
     def get_interface_id(self):
