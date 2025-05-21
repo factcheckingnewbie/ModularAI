@@ -4,37 +4,54 @@ from interfaces.cli_chat_interface import  Cli_Chat
 print("output before eventloop")
 
 # --- Provide a simple event loop in the test ---
+# async def run_event_loop(self):
+#     print("No output in eventloop")
+#     """
+#     Simplified loop for testing:
+#       1) Read from model reader (short timeout) and print to stdout
+#       2) Call builtin input() for user input, write to the model writer
+#     """
+#     while True:
+#         print("No output in eventloop->while")
+#         # 1) Model -> Interface
+#         if hasattr(self, 'reader') and self.reader:
+#             try:
+#                 data = await asyncio.wait_for(self.reader.readline(), timeout=0.1)
+#                 if data:
+#                     # strip newline, print
+#                     print(data.decode('utf-8').rstrip('\n'))
+#             except asyncio.TimeoutError:
+#                 pass
+# 
+#         # 2) User -> Model
+#         try:
+#             user_input = input(self.prompt_symbol)
+#         except EOFError:
+#             user_input = ""
+#         if user_input:
+#             self.writer.write((user_input + "\n").encode('utf-8'))
+#             await self.writer.drain()
+# 
+#         # yield control
+#         print("abc")
+#         await asyncio.sleep(1)
+
+
 async def run_event_loop(self):
-    print("No output in eventloop")
-    """
-    Simplified loop for testing:
-      1) Read from model reader (short timeout) and print to stdout
-      2) Call builtin input() for user input, write to the model writer
-    """
-    while True:
-        print("No output in eventloop->while")
-        # 1) Model -> Interface
-        if hasattr(self, 'reader') and self.reader:
-            try:
-                data = await asyncio.wait_for(self.reader.readline(), timeout=0.1)
-                if data:
-                    # strip newline, print
-                    print(data.decode('utf-8').rstrip('\n'))
-            except asyncio.TimeoutError:
-                pass
-
-        # 2) User -> Model
+    # One pass through model->interface, then exit
+    # 1) Model -> Interface
+    if hasattr(self, 'reader') and self.reader:
         try:
-            user_input = input(self.prompt_symbol)
-        except EOFError:
-            user_input = ""
-        if user_input:
-            self.writer.write((user_input + "\n").encode('utf-8'))
-            await self.writer.drain()
+            data = await asyncio.wait_for(self.reader.readline(), timeout=0.5)
+            if data:
+                # strip newline, print
+                print(data.decode('utf-8').rstrip('\n'))
+        except asyncio.TimeoutError:
+            pass
 
-        # yield control
-        print("abc")
-        await asyncio.sleep(1)
+    # Don't block on input in the first test
+    # (the second test monkey-patches input directly)
+    return
 
 # Monkey-patch the interface class for tests
 Cli_Chat.run_event_loop = run_event_loop
