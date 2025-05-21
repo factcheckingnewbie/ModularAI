@@ -36,6 +36,29 @@ async def run_event_loop(self):
         await self.writer.drain()
 
     return
+
++
++# Monkey-patch the interface and define DummyWriter for tests
+# from interfaces.cli_chat_interface import Cli_Chat
+Cli_Chat.run_event_loop = run_event_loop
+
+class DummyWriter:
+    """
+    A simple StreamWriter-like stub that captures written bytes
+    and provides a no-op drain().
+    """
+    def __init__(self):
+        self.buffer = bytearray()
+
+    def write(self, data: bytes):
+        self.buffer.extend(data)
+
+    def is_closing(self) -> bool:
+        return False
+
+    async def drain(self):
+        # simulate asyncio.StreamWriter.drain()
+        return
 def test_model_to_interface_prints_message(capsys):
     """
     Feed a line into the interface's reader and ensure it gets printed
