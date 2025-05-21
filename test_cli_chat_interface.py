@@ -1,6 +1,6 @@
 import asyncio
 import pytest
-from interfaces.cli_chat_interface import CliP as CLIChatInterface
+from interfaces.cli_chat_interface import  Cli_Chat
 
 # --- Provide a simple event loop in the test ---
 async def run_event_loop(self):
@@ -33,7 +33,7 @@ async def run_event_loop(self):
         await asyncio.sleep(0)
 
 # Monkey-patch the interface class for tests
-CLIChatInterface.run_event_loop = run_event_loop
+Cli_Chat.run_event_loop = run_event_loop
 
 class DummyWriter:
     """
