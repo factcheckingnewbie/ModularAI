@@ -1,7 +1,14 @@
+# import asyncio
+import os
+import sys
+# ensure project root is on PYTHONPATH so 'interfaces' can be imported
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 import asyncio
 import pytest
+
 from interfaces.cli_chat_interface import  Cli_Chat
-print("output before eventloop")
+# print("output before eventloop")
 
 # --- Provide a simple event loop in the test ---
 # async def run_event_loop(self):
