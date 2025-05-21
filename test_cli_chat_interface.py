@@ -30,7 +30,8 @@ async def run_event_loop(self):
             await self.writer.drain()
 
         # yield control
-        await asyncio.sleep(0)
+        print("abc")
+        await asyncio.sleep(1)
 
 # Monkey-patch the interface class for tests
 Cli_Chat.run_event_loop = run_event_loop
@@ -50,7 +51,7 @@ class DummyWriter:
         return False
 
     async def drain(self):
-        # no-op for testing
+        print("abc")
         pass
 
 @pytest.mark.asyncio
@@ -61,8 +62,8 @@ async def test_model_to_interface_prints_message(capsys):
     """
     reader = asyncio.StreamReader()
     writer = DummyWriter()
-    interface = CLIChatInterface(prompt_symbol="> ")
-    interface.set_streams(reader, writer)
+    interface = Cli_Chat(prompt_symbol="> ")
+    await interface.setup_streams(reader, writer)
 
     # Simulate model sending a message
     test_line = "Model says hello\n".encode('utf-8')
@@ -70,10 +71,11 @@ async def test_model_to_interface_prints_message(capsys):
     reader.feed_eof()
 
     # Run the interface loop briefly
+    print("abc")
     task = asyncio.create_task(interface.run_event_loop())
     # let it process the fed data
-    await asyncio.sleep(0.1)
-    task.cancel()
+    await asyncio.sleep(1)
+    # task.cancel()
 
     # Capture stdout and verify printed output
     captured = capsys.readouterr()
@@ -87,17 +89,18 @@ async def test_user_input_writes_to_writer(monkeypatch):
     """
     reader = asyncio.StreamReader()
     writer = DummyWriter()
-    interface = CLIChatInterface(prompt_symbol="> ")
-    interface.set_streams(reader, writer)
+    interface = Cli_Chat(prompt_symbol="> ")
+    await interface.setup_streams(reader, writer)
 
     # Prepare two inputs, then stop
     inputs = ["first message", "second message"]
     monkeypatch.setattr('builtins.input', lambda prompt: inputs.pop(0) if inputs else "")
 
     # Run the interface loop briefly
+    print("abc")
     task = asyncio.create_task(interface.run_event_loop())
-    await asyncio.sleep(0.1)
-    task.cancel()
+    await asyncio.sleep(1)
+   # task.cancel()
 
     # Verify that both messages (with newline) were written out
     written = writer.buffer.decode('utf-8')
