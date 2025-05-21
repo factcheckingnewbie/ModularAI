@@ -9,21 +9,28 @@ import pytest
 from interfaces.cli_chat_interface import Cli_Chat
 
 # print("output before eventloop")
-
 async def run_event_loop(self):
-    # One pass through model->interface, then exit
+    # 1) Model -> Interface (one shot)
     if hasattr(self, 'reader') and self.reader:
         try:
             data = await asyncio.wait_for(self.reader.readline(), timeout=0.5)
             if data:
-                # strip newline, print
                 print(data.decode('utf-8').rstrip('\n'))
         except asyncio.TimeoutError:
             pass
 
-    # Don't block on input in the first test
-    return
+    # 2) User -> Model: read all patched inputs, write them, then exit
+    while True:
+        try:
+            user_input = input(self.prompt_symbol)
+        except EOFError:
+            break
+        if not user_input:
+            break
+        self.writer.write((user_input + "\n").encode('utf-8'))
+        await self.writer.drain()
 
+    return
 # Monkey-patch the interface class for tests
 Cli_Chat.run_event_loop = run_event_loop
 
