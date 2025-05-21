@@ -1,7 +1,7 @@
 {
   "interfaces": [
     {
-      "id": "chat_interface",
+      "id": "Cli_Chat",
       "name": "Command Line chat Interface",
       "path": "./interfaces/cli_chat_interface.py",
       "description": "Command-line interface for gpt2 conversations",

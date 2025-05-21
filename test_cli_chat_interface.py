@@ -1,6 +1,39 @@
 import asyncio
 import pytest
-from interfaces.cli_chat_interface import CliP
+from interfaces.cli_chat_interface import CliP as CLIChatInterface
+
+# --- Provide a simple event loop in the test ---
+async def run_event_loop(self):
+    """
+    Simplified loop for testing:
+      1) Read from model reader (short timeout) and print to stdout
+      2) Call builtin input() for user input, write to the model writer
+    """
+    while True:
+        # 1) Model -> Interface
+        if hasattr(self, 'reader') and self.reader:
+            try:
+                data = await asyncio.wait_for(self.reader.readline(), timeout=0.1)
+                if data:
+                    # strip newline, print
+                    print(data.decode('utf-8').rstrip('\n'))
+            except asyncio.TimeoutError:
+                pass
+
+        # 2) User -> Model
+        try:
+            user_input = input(self.prompt_symbol)
+        except EOFError:
+            user_input = ""
+        if user_input:
+            self.writer.write((user_input + "\n").encode('utf-8'))
+            await self.writer.drain()
+
+        # yield control
+        await asyncio.sleep(0)
+
+# Monkey-patch the interface class for tests
+CLIChatInterface.run_event_loop = run_event_loop
 
 class DummyWriter:
     """

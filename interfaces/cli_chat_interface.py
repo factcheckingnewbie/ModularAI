@@ -15,7 +15,7 @@ import os
 from asyncio import StreamReader, StreamWriter
 
 
-class CliP:
+class CliChat:
     """
     """
     
