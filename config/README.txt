@@ -1,1 +1,1 @@
-Overriden "structured_output": true, instead of alse to get module_controller to accept the module
+Overriden "structured_output in model_modules.json true, instead of alse to get module_controller to accept the module

@@ -44,7 +44,7 @@ class GPT2Model:
         self.reader: Optional[StreamReader] = None
         self.writer: Optional[StreamWriter] = None
         self.generator = None
-        self.running = True
+        self.running = False
         self.tasks = set()
         self.config = {
             "max_response_tokens": 1000,
