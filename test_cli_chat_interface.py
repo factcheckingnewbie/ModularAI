@@ -1,15 +1,18 @@
 import asyncio
 import pytest
 from interfaces.cli_chat_interface import  Cli_Chat
+print("output before eventloop")
 
 # --- Provide a simple event loop in the test ---
 async def run_event_loop(self):
+    print("No output in eventloop")
     """
     Simplified loop for testing:
       1) Read from model reader (short timeout) and print to stdout
       2) Call builtin input() for user input, write to the model writer
     """
     while True:
+        print("No output in eventloop->while")
         # 1) Model -> Interface
         if hasattr(self, 'reader') and self.reader:
             try:
