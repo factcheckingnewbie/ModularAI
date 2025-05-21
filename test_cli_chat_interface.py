@@ -1,52 +1,17 @@
-# import asyncio
 import os
 import sys
+
 # ensure project root is on PYTHONPATH so 'interfaces' can be imported
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 import asyncio
 import pytest
+from interfaces.cli_chat_interface import Cli_Chat
 
-from interfaces.cli_chat_interface import  Cli_Chat
 # print("output before eventloop")
-
-# --- Provide a simple event loop in the test ---
-# async def run_event_loop(self):
-#     print("No output in eventloop")
-#     """
-#     Simplified loop for testing:
-#       1) Read from model reader (short timeout) and print to stdout
-#       2) Call builtin input() for user input, write to the model writer
-#     """
-#     while True:
-#         print("No output in eventloop->while")
-#         # 1) Model -> Interface
-#         if hasattr(self, 'reader') and self.reader:
-#             try:
-#                 data = await asyncio.wait_for(self.reader.readline(), timeout=0.1)
-#                 if data:
-#                     # strip newline, print
-#                     print(data.decode('utf-8').rstrip('\n'))
-#             except asyncio.TimeoutError:
-#                 pass
-# 
-#         # 2) User -> Model
-#         try:
-#             user_input = input(self.prompt_symbol)
-#         except EOFError:
-#             user_input = ""
-#         if user_input:
-#             self.writer.write((user_input + "\n").encode('utf-8'))
-#             await self.writer.drain()
-# 
-#         # yield control
-#         print("abc")
-#         await asyncio.sleep(1)
-
 
 async def run_event_loop(self):
     # One pass through model->interface, then exit
-    # 1) Model -> Interface
     if hasattr(self, 'reader') and self.reader:
         try:
             data = await asyncio.wait_for(self.reader.readline(), timeout=0.5)
@@ -57,7 +22,6 @@ async def run_event_loop(self):
             pass
 
     # Don't block on input in the first test
-    # (the second test monkey-patches input directly)
     return
 
 # Monkey-patch the interface class for tests
@@ -78,58 +42,62 @@ class DummyWriter:
         return False
 
     async def drain(self):
-        print("abc")
-        pass
+        # simulate asyncio's drain side-effect
+#        print("async def drain(self):")
+        return
 
-@pytest.mark.asyncio
-async def test_model_to_interface_prints_message(capsys):
+def test_model_to_interface_prints_message(capsys):
     """
     Feed a line into the interface's reader and ensure it gets printed
     to stdout by the CLIChatInterface.
     """
-    reader = asyncio.StreamReader()
-    writer = DummyWriter()
-    interface = Cli_Chat(prompt_symbol="> ")
-    await interface.setup_streams(reader, writer)
+    async def runner():
+        reader = asyncio.StreamReader()
+        writer = DummyWriter()
+        interface = Cli_Chat(prompt_symbol="> ")
+        await interface.setup_streams(reader, writer)
 
-    # Simulate model sending a message
-    test_line = "Model says hello\n".encode('utf-8')
-    reader.feed_data(test_line)
-    reader.feed_eof()
+        # Simulate model sending a message
+        test_line = "Model says hello\n".encode('utf-8')
+        reader.feed_data(test_line)
+        reader.feed_eof()
 
-    # Run the interface loop briefly
-    print("abc")
-    task = asyncio.create_task(interface.run_event_loop())
-    # let it process the fed data
-    await asyncio.sleep(1)
-    # task.cancel()
+        # Run the interface loop briefly
+#        print("0.1 before: task = asyncio.create_task(interface.run_event_loop())")
+        task = asyncio.create_task(interface.run_event_loop())
+#        print("0.2 before: await asyncio.sleep(0.5)")
+        await asyncio.sleep(0.5)
+        # ensure the task completes
+        await task
 
-    # Capture stdout and verify printed output
+    asyncio.run(runner())
     captured = capsys.readouterr()
     assert "Model says hello" in captured.out
 
-@pytest.mark.asyncio
-async def test_user_input_writes_to_writer(monkeypatch):
+def test_user_input_writes_to_writer(monkeypatch):
     """
     Monkey-patch builtins.input to simulate two user inputs,
     then verify that they are sent (with newline) to the controller via writer.
     """
-    reader = asyncio.StreamReader()
-    writer = DummyWriter()
-    interface = Cli_Chat(prompt_symbol="> ")
-    await interface.setup_streams(reader, writer)
+    async def runner():
+        reader = asyncio.StreamReader()
+        writer = DummyWriter()
+        interface = Cli_Chat(prompt_symbol="> ")
+        await interface.setup_streams(reader, writer)
 
-    # Prepare two inputs, then stop
-    inputs = ["first message", "second message"]
-    monkeypatch.setattr('builtins.input', lambda prompt: inputs.pop(0) if inputs else "")
+        # Prepare two inputs, then stop
+        inputs = ["first message", "second message"]
+        monkeypatch.setattr('builtins.input', lambda prompt: inputs.pop(0) if inputs else "")
 
-    # Run the interface loop briefly
-    print("abc")
-    task = asyncio.create_task(interface.run_event_loop())
-    await asyncio.sleep(1)
-   # task.cancel()
+        # Run the interface loop briefly
+#        print("1. Before: task = asyncio.create_task(interface.run_event_loop())")
+        task = asyncio.create_task(interface.run_event_loop())
+        await asyncio.sleep(0.5)
+        await task
 
-    # Verify that both messages (with newline) were written out
-    written = writer.buffer.decode('utf-8')
-    assert "first message\n" in written
-    assert "second message\n" in written
+        # Verify that both messages (with newline) were written out
+        written = writer.buffer.decode('utf-8')
+        assert "first message\n" in written
+        assert "second message\n" in written
+
+    asyncio.run(runner())
