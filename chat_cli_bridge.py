@@ -2,69 +2,64 @@ import os
 import sys
 import asyncio
 
-# Ensure project root is on PYTHONPATH so our modules can be imported
+# ensure project root is on PYTHONPATH so 'interfaces' can be imported
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from interfaces.cli_chat_interface import Cli_Chat
 from models.gpt2.gpt2_model import GPT2Model
 
-class DummyWriter:
+async def run_event_loop(self):
     """
-    A minimal StreamWriter-like stub that captures user messages from Cli_Chat
-    and makes them available to the controller loop.
+    One-shot loop:
+      - prompt the user
+      - send input to GPT-2
+      - print GPT-2 reply
+    Return False when user wants to quit.
     """
-    def __init__(self):
-        self.buffer = bytearray()
-    def write(self, data: bytes):
-        # accumulate exactly what Cli_Chat writes
-        self.buffer.extend(data)
-    async def drain(self):
-        # no-op
-        return
-    def is_closing(self):
+    # 1) prompt user
+    try:
+        user_input = await asyncio.to_thread(input, self.prompt_symbol)
+    except EOFError:
         return False
 
-async def chat_loop():
-    # 1) Load GPT2Model
-    model = GPT2Model()
-    ok = await model.load_model()
+    if not user_input or user_input.strip().lower() in ("exit", "quit"):
+        return False
+
+    # 2) generate with GPT-2
+    response = self._gpt2.generator(user_input, max_length=100)
+    # HuggingFace pipeline returns list of dicts
+    if isinstance(response, list) and response and "generated_text" in response[0]:
+        reply = response[0]["generated_text"]
+    else:
+        reply = str(response)
+
+    # 3) print GPT-2 reply
+    print("\n" + reply + "\n")
+    return True
+
+async def main():
+    # 1) Load GPT-2
+    gpt2 = GPT2Model()
+    ok = await gpt2.load_model()
     if not ok:
-        print("❌ Failed to load GPT-2 model.")
+        print("❌ GPT-2 failed to load. Check your transformers install.")
         return
-    print("✅ GPT-2 model loaded.")
+    print("✅ GPT-2 loaded successfully.\n")
 
-    # 2) Create CLI interface
+    # 2) Prepare CLI wrapper
     cli = Cli_Chat(prompt_symbol="> ")
-    reader = asyncio.StreamReader()
-    writer = DummyWriter()
-    await cli.setup_streams(reader, writer)
+    # attach model instance to cli
+    cli._gpt2 = gpt2
+    # monkey-patch our simple run_event_loop
+    Cli_Chat.run_event_loop = run_event_loop
 
-    # 3) Conversation loop
-    print("Type your message (or 'exit' to quit):")
-    while True:
-        # run one pass: model->interface & user->interface
-        await cli.run_event_loop()
+    print("Type your message (or 'exit' to quit):\n")
 
-        # extract user input that Cli_Chat wrote
-        user_text = writer.buffer.decode("utf-8").rstrip("\n")
-        writer.buffer.clear()
+    # 3) Loop until user quits
+    while await cli.run_event_loop():
+        pass
 
-        if not user_text or user_text.lower() in ("exit", "quit"):
-            print("👋 Goodbye!")
-            break
-
-        # 4) Generate GPT-2 response
-        response = model.generator(user_text, max_length=100)
-        # Hugging Face pipeline returns a list of dicts
-        if isinstance(response, list) and "generated_text" in response[0]:
-            bot_reply = response[0]["generated_text"]
-        else:
-            bot_reply = str(response)
-
-        # 5) Feed the model reply back into the CLI reader
-        reader.feed_data((bot_reply + "\n").encode("utf-8"))
-        # ensure EOF so process_model part of run_event_loop doesn't hang
-        reader.feed_eof()
+    print("👋 Goodbye!")
 
 if __name__ == "__main__":
-    asyncio.run(chat_loop())
+    asyncio.run(main())
