@@ -19,11 +19,16 @@ async def run_event_loop(self):
         except asyncio.TimeoutError:
             pass
 
-    # 2) User -> Model: read all patched inputs, write them, then exit
+    # 2) User -> Model: attempt to read inputs via to_thread+timeout, then exit
     while True:
         try:
-            user_input = input(self.prompt_symbol)
-        except EOFError:
+            # run input() in a thread so we can timeout if it's blocking
+            user_input = await asyncio.wait_for(
+                asyncio.to_thread(input, self.prompt_symbol),
+                timeout=0.1
+            )
+        except asyncio.TimeoutError:
+            # no more inputs available, exit
             break
         if not user_input:
             break
@@ -31,28 +36,6 @@ async def run_event_loop(self):
         await self.writer.drain()
 
     return
-# Monkey-patch the interface class for tests
-Cli_Chat.run_event_loop = run_event_loop
-
-class DummyWriter:
-    """
-    A simple StreamWriter-like stub that captures written bytes
-    and provides a no-op drain().
-    """
-    def __init__(self):
-        self.buffer = bytearray()
-
-    def write(self, data: bytes):
-        self.buffer.extend(data)
-
-    def is_closing(self) -> bool:
-        return False
-
-    async def drain(self):
-        # simulate asyncio's drain side-effect
-#        print("async def drain(self):")
-        return
-
 def test_model_to_interface_prints_message(capsys):
     """
     Feed a line into the interface's reader and ensure it gets printed
