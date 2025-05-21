@@ -3,7 +3,7 @@
     {
       "id": "gpt2",
       "name": "GPT-2 Model",
-      "path": "./ModularAI/models/gpt2/gpt2_model.py",
+      "path": "./models/gpt2/gpt2_model.py",
       "description": "GPT-2 based AI model for text generation",
       "version": "1.0.0",
       "author": "ModularAI Team",
@@ -11,7 +11,7 @@
       "multiple_sessions": true,
       "capabilities": {
         "text_io": true,
-        "structured_output": false,
+        "structured_output": true,
         "language_understanding": true
       },
       "requirements": {

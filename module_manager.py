@@ -28,15 +28,15 @@ class ModuleManager:
         Load configuration files for interfaces and models.
         
         Reads:
-        - ./ModularAI/config/interface_modules.json
-        - ./ModularAI/config/model_modules.json
+        - ./config/interface_modules.json
+        - ./config/model_modules.json
         
         Returns:
             bool: True if configs loaded successfully, False otherwise
         """
         # Check file paths existence before access attempts
-        interface_path = Path('./ModularAI/config/interface_modules.json')
-        model_path = Path('./ModularAI/config/model_modules.json')
+        interface_path = Path('./config/interface_modules.json')
+        model_path = Path('./config/model_modules.json')
         
         if not interface_path.exists():
             print(f"Error: Interface configuration file not found at {interface_path}")
@@ -354,7 +354,7 @@ class ModuleManager:
             return False
         
         # Import controller module
-        controller_path = './ModularAI/core/module_controller.py'
+        controller_path = './core/module_controller.py'
         print(f"Importing controller module from: {controller_path}")
         controller_module = await self._import_module(controller_path)
         

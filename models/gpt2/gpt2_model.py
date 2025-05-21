@@ -44,14 +44,18 @@ class GPT2Model:
         self.reader: Optional[StreamReader] = None
         self.writer: Optional[StreamWriter] = None
         self.generator = None
-        self.running = False
+        self.running = True
         self.tasks = set()
         self.config = {
             "max_response_tokens": 1000,
             "temperature": 0.7,
             "request_timeout": 30,  # Timeout for requests in seconds
         }
-    
+    def get_model_id(self) -> str:
+        """
+        Return the model ID used in config/model_modules.json.
+        """
+        return "gpt2"
     async def initialize(self, config: Optional[Dict[str, Any]] = None) -> bool:
         """
         Initialize the model with configuration parameters.

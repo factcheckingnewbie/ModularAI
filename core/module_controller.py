@@ -27,7 +27,7 @@ class ModuleController:
     """
     
     # Protocol version for compatibility checking
-    PROTOCOL_VERSION = "0.0.1"
+    PROTOCOL_VERSION = "1.0.0"
     
     def __init__(self):
         self.interface = None
@@ -52,7 +52,7 @@ class ModuleController:
         try:
             self.interface = interface
             logger.info(f"Connecting to interface: {interface.__class__.__name__}")
-                return True
+            return True
         except Exception as e:
             logger.error(f"Error connecting to interface: {e}", exc_info=True)
             return False
@@ -388,5 +388,4 @@ class ModuleController:
         self.model_reader = None
         self.model_writer = None
         self.tasks.clear()
-        
-            logger.info("Module controller shutdown complete")
+        logger.info("Module controller shutdown complete")

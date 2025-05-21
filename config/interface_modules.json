@@ -3,9 +3,9 @@
     {
       "id": "chat_interface",
       "name": "Command Line chat Interface",
-      "path": "./ModularAI/interfaces/cli_chat_interface.py",
+      "path": "./interfaces/cli_chat_interface.py",
       "description": "Command-line interface for gpt2 conversations",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "author": "ModularAI Team",
       "non_blocking": true,
       "multiple_connections": true,
