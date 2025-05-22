@@ -6,6 +6,45 @@ Exposes a single async function `run_module` but does not execute on its own.
 
 import asyncio
 import socket
+from asyncio import StreamReader, StreamWriter
+
+async def create_streams():
+    """
+    Set up socketpairs and open asyncio streams for communication between components.
+    
+    Returns:
+        Tuple: (interface_reader, interface_writer, model_reader, model_writer)
+    """
+    sock_a, sock_b = socket.socketpair()
+    interface_reader, model_writer = await asyncio.open_connection(sock=sock_a)
+    model_reader, interface_writer = await asyncio.open_connection(sock=sock_b)
+    
+    return interface_reader, interface_writer, model_reader, model_writer
+
+def wire_components(interface, model, interface_reader, interface_writer, model_reader, model_writer):
+    """
+    Attach streams to interface and model using standardized methods.
+    
+    Args:
+        interface: The interface component instance
+        model: The model component instance
+        interface_reader: StreamReader for interface reading
+        interface_writer: StreamWriter for interface writing
+        model_reader: StreamReader for model reading
+        model_writer: StreamWriter for model writing
+    """
+    # Attach streams to interface
+    # The interface needs both reader/writer pairs
+    interface.interface_reader = interface_reader
+    interface.interface_writer = interface_writer
+    interface.model_reader = model_reader
+    interface.model_writer = model_writer
+    
+    # Attach model reference to interface (required for current implementation)
+    interface._gpt2 = model
+    
+    # Attach streams to model (using standard method)
+    model.set_streams(model_reader, model_writer)
 
 async def run_event_loop(self):
     """
@@ -48,20 +87,16 @@ async def run_module(Cli_Chat, GPT2Model):
         return
     print("✅ GPT-2 loaded.\n")
 
-    # 2) Create socketpairs & open asyncio streams
-    sock_a, sock_b = socket.socketpair()
-    interface_reader, model_writer = await asyncio.open_connection(sock=sock_a)
-    model_reader, interface_writer = await asyncio.open_connection(sock=sock_b)
+    # 2) Create streams for communication
+    interface_reader, interface_writer, model_reader, model_writer = await create_streams()
 
     # 3) Instantiate CLI and attach streams + model
     cli = Cli_Chat(prompt_symbol="> ")
-    cli.interface_reader = interface_reader
-    cli.interface_writer = interface_writer
-    cli.model_reader     = model_reader
-    cli.model_writer     = model_writer
-    cli._gpt2            = gpt2
+    
+    # 4) Wire up components
+    wire_components(cli, gpt2, interface_reader, interface_writer, model_reader, model_writer)
 
-    # 4) Monkey-patch our relay loop
+    # 5) Monkey-patch our relay loop
     Cli_Chat.run_event_loop = run_event_loop
 
     # 5) Define pump/loop tasks
