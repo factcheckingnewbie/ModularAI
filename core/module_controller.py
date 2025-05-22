@@ -123,6 +123,7 @@ class ModuleController:
                 message: Description of compatibility status
         """
         try:
+            logger.debug(f"Checking compatibility between interface={self.interface.__class__.__name__ if self.interface else None} and model={self.model.__class__.__name__ if self.model else None}")
             if not self.interface or not self.model:
                 return False, "Interface or model not connected"
                 
@@ -188,6 +189,7 @@ class ModuleController:
                             data = (json.dumps(message) + '\n').encode('utf-8')
                     except json.JSONDecodeError:
                         # Not JSON, pass through unchanged
+                        logger.debug(f"JSON decode error in relay_to_model: {data[:100]}...")
                         pass
                     
                     # Write to model
@@ -243,6 +245,7 @@ class ModuleController:
                                 continue
                     except json.JSONDecodeError:
                         # Not JSON, pass through
+                        logger.debug(f"JSON decode error in relay_to_interface: {data[:100]}...")
                         pass
                     
                     # Write to interface
@@ -315,6 +318,7 @@ class ModuleController:
             self.running = True
             
             # Create relay tasks
+            logger.debug("Creating relay tasks for mediation")
             interface_relay_task = asyncio.create_task(self.relay_to_model())
             model_relay_task = asyncio.create_task(self.relay_to_interface())
             
@@ -344,6 +348,7 @@ class ModuleController:
         """
         Close all connections and clean up resources.
         """
+        logger.debug("Starting shutdown process for module controller")
         logger.info("Shutting down module controller")
         self.running = False
         
