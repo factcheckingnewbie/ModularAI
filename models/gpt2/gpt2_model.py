@@ -17,6 +17,8 @@ import logging
 from asyncio import StreamReader, StreamWriter, CancelledError, TimeoutError
 from typing import Dict, Any, Optional, Tuple
 
+# We'll import transformers modules dynamically to avoid hard dependency
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -85,16 +87,24 @@ class GPT2Model:
             # This allows the module to be loaded even if transformers is not installed
             # The actual error will only occur when trying to use the model
             try:
-                from transformers import pipeline
+                from transformers import pipeline, AutoTokenizer
             except ImportError:
                 logger.error("Transformers library not found. Please install it with 'pip install transformers'")
                 return False
                 
             # Use run_in_executor to avoid blocking the event loop
             loop = asyncio.get_running_loop()
+            
+            # Initialize tokenizer with proper pad_token to avoid warnings
+            tokenizer = await loop.run_in_executor(
+                None,
+                lambda: self._initialize_tokenizer('gpt2')
+            )
+            
+            # Create pipeline with configured tokenizer
             self.generator = await loop.run_in_executor(
                 None, 
-                lambda: pipeline('text-generation', model='gpt2')
+                lambda: pipeline('text-generation', model='gpt2', tokenizer=tokenizer)
             )
             logger.info("Model loaded successfully")
             return True
@@ -531,6 +541,22 @@ class GPT2Model:
         except Exception as e:
             logger.error(f"Error sending response: {e}", exc_info=True)
     
+    def _initialize_tokenizer(self, model_name: str):
+        """
+        Initialize a tokenizer with proper pad_token configuration.
+        
+        Args:
+            model_name: Name of the model to load tokenizer for
+            
+        Returns:
+            Configured tokenizer
+        """
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        # GPT-2 doesn't have a pad token by default, set it to the EOS token
+        # This avoids warnings about setting pad_token_id to eos_token_id
+        tokenizer.pad_token = tokenizer.eos_token
+        return tokenizer
+        
     async def shutdown(self) -> None:
         """Shutdown the model gracefully."""
         logger.info("Shutting down model")
