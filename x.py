@@ -91,7 +91,7 @@ async def main():
         except asyncio.CancelledError:
             return
 
-    async def controller_loop():
+    async def modcon_loop():
         # drive the patched run_event_loop until it returns False
         while await cli.run_event_loop():
             pass
@@ -101,11 +101,11 @@ async def main():
     # 7) Run all tasks and ensure proper cancellation
     stdin_task = asyncio.create_task(stdin_to_interface())
     model_task = asyncio.create_task(pump_model())
-    controller_task = asyncio.create_task(controller_loop())
+    modcon_task = asyncio.create_task(modcon_loop())
 
     # Wait for the controller loop to finish
     try:
-        await controller_task
+        await modcon_task
     finally:
         # Cancel both pump tasks
         stdin_task.cancel()
