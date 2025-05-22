@@ -4,7 +4,7 @@
 #
 
 # path to the file where you keep your “always-read” instructions
-INSTR_FILE="./.docs/PERSONAL_INSTRUCTIONS.md"
+INSTR_FILE="/home/ptr/Developement/guided/ModularAI/.docs/PERSONAL_INSTRUCTIONS.md"
 
 if [ -f "$INSTR_FILE" ]; then
   echo
