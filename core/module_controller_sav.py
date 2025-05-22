@@ -160,11 +160,7 @@ class ModuleController:
         Non-blocking implementation using asyncio.
         """
         try:
-#            logger.info("Starting relay from interface to model")
-            logger.info("Starting relay from interface to model"
-                        f" | running={self.running}"
-                        f" interface_reader.at_eof={self.interface_reader.at_eof()}"
-                        f" model_writer.is_closing={self.model_writer.is_closing()}")
+            logger.info("Starting relay from interface to model")
             
             while self.running and not self.interface_reader.at_eof():
                 try:
@@ -216,12 +212,8 @@ class ModuleController:
         Non-blocking implementation using asyncio.
         """
         try:
-#            logger.info("Starting relay from model to interface")
-            logger.info("Starting relay from interface to model"
-                        f" | running={self.running}"
-                        f" interface_reader.at_eof={self.interface_reader.at_eof()}"
-                        f" model_writer.is_closing={self.model_writer.is_closing()}")
-           
+            logger.info("Starting relay from model to interface")
+            
             while self.running and not self.model_reader.at_eof():
                 try:
                     # Read a line from model
