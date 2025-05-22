@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '**/*.py'
+      - '**/*.json'
       - '.githooks/**'
       - 'CONTRIBUTING.md'
 
