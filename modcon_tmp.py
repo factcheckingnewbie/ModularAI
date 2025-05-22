@@ -1,8 +1,20 @@
+#!/usr/bin/env python3
+"""
+Minimal ModuleController based on chat_cli_bridge.py
+
+This “modcon_tmp” skips module_manager and config scanning.
+It wires up exactly two fixed modules:
+  • interfaces/cli_chat_interface.Cli_Chat
+  • models/gpt2/gpt2_model.GPT2Model
+
+We’ll iterate on this until we isolate the AttributeError in streams.
+"""
+
 import os
 import sys
 import asyncio
 
-# ensure project root is on PYTHONPATH so 'interfaces' can be imported
+# ─── ensure project root is on PYTHONPATH so interfaces/models import correctly
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from interfaces.cli_chat_interface import Cli_Chat
@@ -11,12 +23,12 @@ from models.gpt2.gpt2_model import GPT2Model
 async def run_event_loop(self):
     """
     One-shot loop:
-      - prompt the user
-      - send input to GPT-2
-      - print GPT-2 reply
-    Return False when user wants to quit.
+      1) prompt the user
+      2) send input to GPT-2
+      3) print GPT-2 reply
+    Returns False when user wants to quit.
     """
-    # 1) prompt user
+    # 1) prompt user (offload to thread so as not to block loop)
     try:
         user_input = await asyncio.to_thread(input, self.prompt_symbol)
     except EOFError:
@@ -38,7 +50,7 @@ async def run_event_loop(self):
     return True
 
 async def main():
-    # 1) Load GPT-2
+    # 1) Load GPT-2 model
     gpt2 = GPT2Model()
     ok = await gpt2.load_model()
     if not ok:
@@ -46,11 +58,11 @@ async def main():
         return
     print("✅ GPT-2 loaded successfully.\n")
 
-    # 2) Prepare CLI wrapper
+    # 2) Instantiate CLI interface
     cli = Cli_Chat(prompt_symbol="> ")
-    # attach model instance to cli
+    # attach model instance to cli for our patched loop
     cli._gpt2 = gpt2
-    # monkey-patch our simple run_event_loop
+    # override run_event_loop with our minimal loop
     Cli_Chat.run_event_loop = run_event_loop
 
     print("Type your message (or 'exit' to quit):\n")
