@@ -64,6 +64,10 @@ async def run_module(Cli_Chat, GPT2Model):
     # 4) Monkey-patch our relay loop
     Cli_Chat.run_event_loop = run_event_loop
 
+    # Send initial loading message to interface
+    interface_writer.write("model loading...\n".encode())
+    await interface_writer.drain()
+
     # 5) Define pump/loop tasks
     async def pump_stdin():
         try:
