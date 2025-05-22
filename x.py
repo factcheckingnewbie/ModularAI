@@ -77,20 +77,42 @@ async def main():
     cli.interface_reader = interface_reader
     cli.model_writer     = model_writer
     cli.interface_writer = interface_writer  # for stdin pump
-    cli.model_reader     = model_reader     # unused here
+    cli.model_reader     = model_reader     # now used by pump_model()
     cli._gpt2            = gpt2
 
     # 5) Monkey-patch our relay loop
     Cli_Chat.run_event_loop = run_event_loop
 
-    # 6) Define the two tasks
+    # 6) Define the tasks
     async def stdin_to_interface():
         try:
+            print("[DEBUG] stdin_to_interface task started")
             while True:
                 line = await asyncio.to_thread(input, cli.prompt_symbol)
+                print(f"[DEBUG] User input: {line}")
                 interface_writer.write((line + "\n").encode())
                 await interface_writer.drain()
         except asyncio.CancelledError:
+            print("[DEBUG] stdin_to_interface task cancelled")
+            return
+
+    async def pump_model():
+        try:
+            print("[DEBUG] pump_model task started")
+            while True:
+                print("[DEBUG] Waiting for model output...")
+                data = await cli.model_reader.readline()
+                if not data:  # EOF
+                    print("[DEBUG] Model EOF received")
+                    break
+                # Print the model's response to stdout
+                model_output = data.decode().rstrip("\n")
+                print(f"[MODEL OUTPUT] {model_output}")
+        except asyncio.CancelledError:
+            print("[DEBUG] pump_model task cancelled")
+            return
+        except Exception as e:
+            print(f"[DEBUG] Error in pump_model: {e}")
             return
 
     async def modcon_loop():
@@ -100,15 +122,17 @@ async def main():
             
     print("Type your message (or 'exit' to quit):\n")
 
-    # 7) Run both tasks and cancel stdin pump when done
+    # 7) Run all three tasks and cancel them properly when done
     stdin_task = asyncio.create_task(stdin_to_interface())
+    model_task = asyncio.create_task(pump_model())
     mod_task   = asyncio.create_task(modcon_loop())
 
     # wait for the controller loop to finish
     await mod_task
-    # stop pumping stdin
+    # stop the other tasks
     stdin_task.cancel()
-    await asyncio.gather(stdin_task, return_exceptions=True)
+    model_task.cancel()
+    await asyncio.gather(stdin_task, model_task, return_exceptions=True)
 
     print("👋 Goodbye!")
 
