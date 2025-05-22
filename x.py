@@ -34,16 +34,11 @@ async def run_event_loop(self):
         return False
 
     # generate reply
-#    response = self._gpt2.generator(user_input, max_length=100)
-
     response = self._gpt2.generator(
         user_input,
         max_new_tokens=100,
         truncation=True
     )
-    # debug: show raw pipeline output
-    print(f"[DEBUG] raw response: {response}")
-
 
     if isinstance(response, list) and response and "generated_text" in response[0]:
         reply = response[0]["generated_text"]
@@ -86,33 +81,22 @@ async def main():
     # 6) Define the tasks
     async def stdin_to_interface():
         try:
-            print("[DEBUG] stdin_to_interface task started")
             while True:
                 line = await asyncio.to_thread(input, cli.prompt_symbol)
-                print(f"[DEBUG] User input: {line}")
                 interface_writer.write((line + "\n").encode())
                 await interface_writer.drain()
         except asyncio.CancelledError:
-            print("[DEBUG] stdin_to_interface task cancelled")
             return
 
     async def pump_model():
         try:
-            print("[DEBUG] pump_model task started")
             while True:
-                print("[DEBUG] Waiting for model output...")
                 data = await cli.model_reader.readline()
                 if not data:  # EOF
-                    print("[DEBUG] Model EOF received")
                     break
                 # Print the model's response to stdout
-                model_output = data.decode().rstrip("\n")
-                print(f"[MODEL OUTPUT] {model_output}")
+                print(data.decode().rstrip("\n"))
         except asyncio.CancelledError:
-            print("[DEBUG] pump_model task cancelled")
-            return
-        except Exception as e:
-            print(f"[DEBUG] Error in pump_model: {e}")
             return
 
     async def modcon_loop():
