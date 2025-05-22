@@ -378,39 +378,57 @@ class ModuleManager:
             print(f"Error: Could not find or instantiate model with ID: {model_id}")
             return False
         
-        # Create controller instance
+#        # Create controller instance
+#        controller_class = getattr(controller_module, 'ModuleController', None)
+#        if not controller_class:
+#            print("Error: ModuleController class not found in controller module")
+#            return False
+#            
+#        controller = controller_class()
+#        
+#        # Connect modules through controller
+#        print("Connecting interface to controller...")
+#        if not await controller.connect_interface(interface_instance):
+#            print("Error: Failed to connect interface to controller")
+#            return False
+#            
+#        print("Connecting model to controller...")
+#        if not await controller.connect_model(model_instance):
+#            print("Error: Failed to connect model to controller")
+#            return False
+#            
+#        print("Establishing communication streams...")
+#        if not await controller.establish_streams():
+#            print("Error: Failed to establish communication streams")
+#            return False
+#            
+#        print("Starting mediation...")
+#        if not await controller.start_mediation():
+#            print("Error: Failed to start mediation between modules")
+#            return False
+#            
+#        print("Successfully connected modules through controller")
+#        self.controller = controller
+#        return True
+        
+        # Instantiate and run the simplified ModuleController bridge
         controller_class = getattr(controller_module, 'ModuleController', None)
         if not controller_class:
             print("Error: ModuleController class not found in controller module")
             return False
-            
+
         controller = controller_class()
-        
-        # Connect modules through controller
-        print("Connecting interface to controller...")
-        if not await controller.connect_interface(interface_instance):
-            print("Error: Failed to connect interface to controller")
+        # Initialize the bridge (load model, set up streams)
+        if not await controller.setup():
+            print("Error: Controller setup failed")
             return False
-            
-        print("Connecting model to controller...")
-        if not await controller.connect_model(model_instance):
-            print("Error: Failed to connect model to controller")
-            return False
-            
-        print("Establishing communication streams...")
-        if not await controller.establish_streams():
-            print("Error: Failed to establish communication streams")
-            return False
-            
-        print("Starting mediation...")
-        if not await controller.start_mediation():
-            print("Error: Failed to start mediation between modules")
-            return False
-            
-        print("Successfully connected modules through controller")
+
+        # Hand off control to the bridge's run loop
+        await controller.run()
         self.controller = controller
         return True
-        
+
+
     async def run(self):
         """
         Main execution loop for the ModuleManager.
