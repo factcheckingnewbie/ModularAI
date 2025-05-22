@@ -21,32 +21,34 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from interfaces.cli_chat_interface import Cli_Chat
 from models.gpt2.gpt2_model import GPT2Model
 
-async def pump_cli_to_model(reader, writer):
+async def pump_cli_to_model(cli):
     """
-    Read raw bytes from reader and write them to writer without any processing.
+    Read raw bytes from cli.interface_reader and write them to cli.model_writer.
+    No decoding or processing of the byte stream.
     """
     try:
         while True:
-            data = await reader.read(4096)  # Read chunk of bytes
+            data = await cli.interface_reader.readline()  # Read a line of bytes
             if not data:  # EOF
                 break
-            writer.write(data)
-            await writer.drain()
+            cli.model_writer.write(data)
+            await cli.model_writer.drain()
     except asyncio.CancelledError:
         # Clean shutdown when task is cancelled
         return
 
-async def pump_model_to_cli(reader, writer):
+async def pump_model_to_cli(cli):
     """
-    Read raw bytes from model reader and write them to CLI writer without any processing.
+    Read raw bytes from cli.model_reader and write them to cli.interface_writer.
+    No decoding or processing of the byte stream.
     """
     try:
         while True:
-            data = await reader.read(4096)  # Read chunk of bytes
+            data = await cli.model_reader.readline()  # Read a line of bytes
             if not data:  # EOF
                 break
-            writer.write(data)
-            await writer.drain()
+            cli.interface_writer.write(data)
+            await cli.interface_writer.drain()
     except asyncio.CancelledError:
         # Clean shutdown when task is cancelled
         return
@@ -62,7 +64,6 @@ async def main():
 
     # 2) Create paired sockets for interface <-> model
     sock_a, sock_b = socket.socketpair()
-    sock_c, sock_d = socket.socketpair()
 
     # 3) Open asyncio streams
     interface_reader, model_writer = await asyncio.open_connection(sock=sock_a)
@@ -88,12 +89,8 @@ async def main():
 
     async def modcon_loop():
         # Create raw byte stream pumps to replace run_event_loop
-        cli_to_model = asyncio.create_task(
-            pump_cli_to_model(cli.interface_reader, cli.model_writer)
-        )
-        model_to_cli = asyncio.create_task(
-            pump_model_to_cli(cli.model_reader, cli.interface_writer)
-        )
+        cli_to_model = asyncio.create_task(pump_cli_to_model(cli))
+        model_to_cli = asyncio.create_task(pump_model_to_cli(cli))
         
         # Wait for any task to complete (EOF or error)
         done, pending = await asyncio.wait(
@@ -118,8 +115,6 @@ async def main():
     # stop pumping stdin
     stdin_task.cancel()
     await asyncio.gather(stdin_task, return_exceptions=True)
-
-    print("👋 Goodbye!")
 
     print("👋 Goodbye!")
 
