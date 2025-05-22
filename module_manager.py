@@ -386,20 +386,10 @@ class ModuleManager:
             
         controller = controller_class()
         
-        # Connect modules through controller
-        print("Connecting interface to controller...")
-        if not await controller.connect_interface(interface_instance):
-            print("Error: Failed to connect interface to controller")
-            return False
-            
-        print("Connecting model to controller...")
-        if not await controller.connect_model(model_instance):
-            print("Error: Failed to connect model to controller")
-            return False
-            
-        print("Establishing communication streams...")
-        if not await controller.establish_streams():
-            print("Error: Failed to establish communication streams")
+        # Set up controller with instantiated interface and model
+        print("Setting up controller with interface and model...")
+        if not await controller.setup(interface_instance, model_instance):
+            print("Error: Failed to set up controller with interface and model")
             return False
             
         print("Starting mediation...")
