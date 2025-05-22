@@ -6,7 +6,6 @@ Exposes a single async function `run_module` but does not execute on its own.
 
 import asyncio
 import socket
-from asyncio import StreamReader, StreamWriter
 
 async def create_streams():
     """
@@ -33,18 +32,27 @@ def wire_components(interface, model, interface_reader, interface_writer, model_
         model_reader: StreamReader for model reading
         model_writer: StreamWriter for model writing
     """
-    # Attach streams to interface
-    # The interface needs both reader/writer pairs
-    interface.interface_reader = interface_reader
-    interface.interface_writer = interface_writer
+    # Wire up interface streams
+    if hasattr(interface, 'setup_streams'):
+        # If interface has a standard setup_streams method, use it
+        interface.setup_streams(interface_reader, interface_writer)
+    else:
+        # Fallback to direct attribute assignment
+        interface.interface_reader = interface_reader
+        interface.interface_writer = interface_writer
+        
+    # Additional interface streams for model communication
     interface.model_reader = model_reader
     interface.model_writer = model_writer
     
-    # Attach model reference to interface (required for current implementation)
-    interface._gpt2 = model
+    # Wire up model streams
+    if hasattr(model, 'set_streams'):
+        # If model has a standard set_streams method, use it
+        model.set_streams(model_reader, model_writer)
     
-    # Attach streams to model (using standard method)
-    model.set_streams(model_reader, model_writer)
+    # Temporary: attach model reference to interface (required for current implementation)
+    # This is a temporary solution until the interface has better integration with the model
+    interface._gpt2 = model
 
 async def run_event_loop(self):
     """
