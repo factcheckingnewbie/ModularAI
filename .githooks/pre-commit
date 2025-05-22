@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+# PRE-COMMIT HOOK: Remind yourself to reload your Copilot personal instructions
+#
+
+# path to the file where you keep your “always-read” instructions
+INSTR_FILE="PERSONAL_INSTRUCTIONS.md"
+
+if [ -f "$INSTR_FILE" ]; then
+  echo
+  echo "================ COPILOT PERSONAL INSTRUCTIONS ================"
+  # print first 10 non-blank lines as a reminder
+  sed '/./!d;q' -n 1,10 "$INSTR_FILE"
+  echo "=============================================================="
+  echo
+else
+  echo "⚠️  Reminder hook: '$INSTR_FILE' not found.  Create it to store your Copilot instructions."
+  echo
+fi
+
+# allow commit to proceed
+exit 0

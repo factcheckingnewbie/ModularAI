@@ -3,7 +3,7 @@
 set -e
 
 # only run on staged .py files
-if git diff --cached --name-only | grep '\.py$' >/dev/null; then
+if git diff --cached --name-only | grep  '\.(py|json)$' >/dev/null; then
   # generate a patch of staged changes
   git diff --cached > /tmp/copilot.patch
 

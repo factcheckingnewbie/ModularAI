@@ -16,7 +16,7 @@ from asyncio import StreamReader, StreamWriter, CancelledError
 from typing import Dict, Any, Optional, Tuple, Set
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -161,16 +161,11 @@ class ModuleController:
         """
         try:
 #            logger.info("Starting relay from interface to model")
-#            logger.info("Starting relay from interface to model"
-#                        f" | running={self.running}"
-#                        f" interface_reader.at_eof={self.interface_reader.at_eof()}"
-#                        f" model_writer.is_closing={self.model_writer.is_closing()}")
-
-            logger.info(
-                "Starting relay from model to interface | running=%s model_reader.at_eof=%s interface_writer.is_closing=%s",
+            logger.debug(
+                "Starting relay from interface to model | running=%s interface_reader.at_eof=%s model_writer.is_closing=%s",
                 self.running,
-                self.model_reader.at_eof() if self.model_reader else None,
-                self.interface_writer.is_closing() if self.interface_writer else None,
+                self.interface_reader.at_eof() if self.interface_reader else None,
+                self.model_writer.is_closing()    if self.model_writer    else None,
             )            
             while self.running and not self.interface_reader.at_eof():
                 try:
@@ -222,19 +217,8 @@ class ModuleController:
         Non-blocking implementation using asyncio.
         """
         try:
-#            logger.info("Starting relay from model to interface")
-#            logger.info("Starting relay from interface to model"
-#                        f" | running={self.running}"
-#                        f" interface_reader.at_eof={self.interface_reader.at_eof()}"
-#                        f" model_writer.is_closing={self.model_writer.is_closing()}")
-            logger.info(
-                "Starting relay from interface to model | running=%s interface_reader.at_eof=%s model_writer.is_closing=%s",
-                self.running,
-                self.interface_reader.at_eof() if self.interface_reader else None,
-                self.model_writer.is_closing() if self.model_writer else None,
-            )
-
-           
+            logger.info("Starting relay from model to interface")
+            
             while self.running and not self.model_reader.at_eof():
                 try:
                     # Read a line from model
