@@ -1,61 +1,45 @@
 #!/usr/bin/env python3
 """
-Next iteration: fix the gather logic so only one consumer
-reads from interface_reader. We split into two coroutines:
-
-  - stdin_to_interface(): pumps user input into interface_writer
-  - modcon_loop(): repeatedly calls run_event_loop()
-
-We avoid concurrent .readline() calls on the same reader.
+Core runner that ties a CLI interface and GPT-2 model together.
+Exposes a single async function `run_module` but does not execute on its own.
 """
 
-import os
-import sys
 import asyncio
 import socket
 
-# ensure project root is on PYTHONPATH
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-
-from interfaces.cli_chat_interface import Cli_Chat
-from models.gpt2.gpt2_model import GPT2Model
-
 async def run_event_loop(self):
     """
-    Reads from self.interface_reader, writes to self.model_writer,
-    then invokes GPT-2. Returns False on EOF or ‘exit’.
+    Reads one line from self.interface_reader, generates a reply with GPT-2,
+    writes it to self.model_writer, and returns False on EOF or exit.
     """
     data = await self.interface_reader.readline()
     if not data:
         return False
 
-    user_input = data.decode().rstrip("\n")
-    if user_input.strip().lower() in ("exit", "quit"):
+    text = data.decode().rstrip("\n")
+    if text.strip().lower() in ("exit", "quit"):
         return False
 
-    # generate reply
-#    response = self._gpt2.generator(user_input, max_length=100)
-
+    # Generate with GPT-2
     response = self._gpt2.generator(
-        user_input,
+        text,
         max_new_tokens=100,
         truncation=True
     )
-    # debug: show raw pipeline output
-    print(f"[DEBUG] raw response: {response}")
-
-
+    # Extract generated_text
     if isinstance(response, list) and response and "generated_text" in response[0]:
         reply = response[0]["generated_text"]
     else:
         reply = str(response)
 
-    # write reply into model_writer
     self.model_writer.write((reply + "\n").encode())
     await self.model_writer.drain()
     return True
 
-async def main():
+async def run_module(Cli_Chat, GPT2Model):
+    """
+    Instantiate and wire up CLI + GPT-2, then pump stdin ↔ CLI ↔ model.
+    """
     # 1) Load GPT-2
     gpt2 = GPT2Model()
     ok = await gpt2.load_model()
@@ -64,27 +48,24 @@ async def main():
         return
     print("✅ GPT-2 loaded.\n")
 
-    # 2) Create paired sockets for interface <-> model
+    # 2) Create socketpairs & open asyncio streams
     sock_a, sock_b = socket.socketpair()
-    sock_c, sock_d = socket.socketpair()
-
-    # 3) Open asyncio streams
     interface_reader, model_writer = await asyncio.open_connection(sock=sock_a)
     model_reader, interface_writer = await asyncio.open_connection(sock=sock_b)
 
-    # 4) Instantiate CLI and attach streams & model
+    # 3) Instantiate CLI and attach streams + model
     cli = Cli_Chat(prompt_symbol="> ")
     cli.interface_reader = interface_reader
+    cli.interface_writer = interface_writer
+    cli.model_reader     = model_reader
     cli.model_writer     = model_writer
-    cli.interface_writer = interface_writer  # for stdin pump
-    cli.model_reader     = model_reader     # unused here
     cli._gpt2            = gpt2
 
-    # 5) Monkey-patch our relay loop
+    # 4) Monkey-patch our relay loop
     Cli_Chat.run_event_loop = run_event_loop
 
-    # 6) Define the two tasks
-    async def stdin_to_interface():
+    # 5) Define pump/loop tasks
+    async def pump_stdin():
         try:
             while True:
                 line = await asyncio.to_thread(input, cli.prompt_symbol)
@@ -93,24 +74,16 @@ async def main():
         except asyncio.CancelledError:
             return
 
-    async def modcon_loop():
-        # drive the patched run_event_loop until it returns False
+    async def controller_loop():
         while await cli.run_event_loop():
             pass
 
-    print("Type your message (or 'exit' to quit):\n")
+    # 6) Run until exit
+    pump_task = asyncio.create_task(pump_stdin())
+    ctrl_task = asyncio.create_task(controller_loop())
 
-    # 7) Run both tasks and cancel stdin pump when done
-    stdin_task = asyncio.create_task(stdin_to_interface())
-    mod_task   = asyncio.create_task(modcon_loop())
-
-    # wait for the controller loop to finish
-    await mod_task
-    # stop pumping stdin
-    stdin_task.cancel()
-    await asyncio.gather(stdin_task, return_exceptions=True)
+    await ctrl_task
+    pump_task.cancel()
+    await asyncio.gather(pump_task, return_exceptions=True)
 
     print("👋 Goodbye!")
-
-if __name__ == "__main__":
-    asyncio.run(main())
