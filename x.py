@@ -52,8 +52,11 @@ async def run_module(Cli_Chat, GPT2Model):
     # Check if model has ping method and call it
     ping_response = None
     if hasattr(gpt2, "ping") and callable(getattr(gpt2, "ping")):
-        ping_response = await gpt2.ping()
-        logging.info(f"Model ping response: {ping_response}")
+        try:
+            ping_response = await gpt2.ping()
+            logging.info(f"Model ping response: {ping_response}")
+        except Exception as e:
+            logging.error(f"Error during model ping: {e}")
 
     # 2) Create socketpairs & open asyncio streams
     sock_a, sock_b = socket.socketpair()
