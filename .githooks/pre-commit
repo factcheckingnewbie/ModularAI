@@ -7,6 +7,7 @@
 INSTR_FILE="/home/ptr/Developement/guided/ModularAI/.docs/PERSONAL_INSTRUCTIONS.md"
 
 if [ -f "$INSTR_FILE" ]; then
+    echo "$INSTR_FILE"
   echo
   echo "================ COPILOT PERSONAL INSTRUCTIONS ================"
   # print first 10 non-blank lines as a reminder
