@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# ensure patches apply cleanly to HEAD and include context
+set -e
+
+# only run on staged .py files
+if git diff --cached --name-only | grep '\.py$' >/dev/null; then
+  # generate a patch of staged changes
+  git diff --cached > /tmp/copilot.patch
+
+  # check that no patch hunks fail to apply against HEAD
+  if ! git apply --check /tmp/copilot.patch; then
+    echo "ERROR: Copilot-generated patch must apply cleanly against HEAD." >&2
+    exit 1
+  fi
+
+  # verify each hunk has at least one original-context (“- ”) line
+  if grep -E '^@@' /tmp/copilot.patch | grep -vE '^- ' >/dev/null; then
+    echo "ERROR: Patch hunks missing context. Always include at least 3 lines of context from HEAD." >&2
+    exit 1
+  fi
+fi
