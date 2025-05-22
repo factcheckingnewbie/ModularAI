@@ -32,6 +32,16 @@ logging.basicConfig(level=_LEVEL)
 logger = logging.getLogger(__name__)
 
 
+# ─── Monkey-patch StreamWriter.__del__ to ignore missing _transport ────────
+_SW = StreamWriter
+_orig_SW_del = _SW.__del__
+def _safe_SW_del(self):
+    try:
+        _orig_SW_del(self)
+    except AttributeError:
+        pass
+_SW.__del__ = _safe_SW_del
+
 class ModuleController:
     """
     Mediator class  between
@@ -117,7 +127,14 @@ class ModuleController:
             else:
                 logger.error("Model does not implement set_streams method")
                 return False
-            
+            # ─── Fix for StreamWriter.__del_ missing _transport ──────────────
+            # Ensure both writers carry a _transport attribute so Python's
+            # StreamWriter.__del__ won't crash when cleaning up.
+#            for writer in (self.model_writer, self.interface_writer):
+#                if not hasattr(writer, "_transport"):
+#                    # Prefer the real transport if exposed
+#                    transport = getattr(writer, "transport", None)
+#                    writer._transport = transport if transport is not None else writer          
             logger.info("Communication streams established successfully")
             return True
             
@@ -183,6 +200,10 @@ class ModuleController:
                 try:
                     # Read a line from interface
                     data = await self.interface_reader.readline()
+                    logger.trace("From interface (%d bytes): %r",
+                                 len(data),
+                                 data.decode('utf-8', errors='replace'))
+
                     if not data:
                         logger.info("Interface EOF received")
                         self.running = False  # Signal other tasks to terminate
@@ -205,8 +226,10 @@ class ModuleController:
                     # Write to model
                     if not self.model_writer.is_closing():
                         self.model_writer.write(data)
+#                        logger.trace("Relayed %d bytes to model", len(data)) 
+                        self.model_writer.write(data)
                         await self.model_writer.drain()
-                        logger.trace("Relayed %d bytes to model", len(data)) 
+                        # TRACE: sent to
                     else:
                         logger.warning("Model writer closed, can't send data")
                         break
@@ -379,13 +402,25 @@ class ModuleController:
                 logger.error(f"Error waiting for tasks: {e}", exc_info=True)
         
         # Close writers
+##        if self.model_writer and not self.model_writer.is_closing():
+##            try:
+##                self.model_writer.close()
+##                await asyncio.sleep(0.1)  # Brief pause to allow closure
+##            except Exception as e:
+##                logger.error(f"Error closing model writer: {e}", exc_info=True)
+
         if self.model_writer and not self.model_writer.is_closing():
             try:
                 self.model_writer.close()
-                await asyncio.sleep(0.1)  # Brief pause to allow closure
+                # Await proper shutdown if supported
+                try:
+                    await self.model_writer.wait_closed()
+                except (AttributeError, RuntimeError):
+                    # Fallback for older streams or closed loops
+                    await asyncio.sleep(0.1)
             except Exception as e:
                 logger.error(f"Error closing model writer: {e}", exc_info=True)
-                
+                 
         if self.interface_writer and not self.interface_writer.is_closing():
             try:
                 self.interface_writer.close()
