@@ -5,6 +5,7 @@ Exposes a single async function `run_module` but does not execute on its own.
 """
 
 import asyncio
+import logging
 import socket
 
 async def run_event_loop(self):
@@ -47,6 +48,12 @@ async def run_module(Cli_Chat, GPT2Model):
         print("❌ GPT-2 failed to load.")
         return
     print("✅ GPT-2 loaded.\n")
+    
+    # Check if model has ping method and call it
+    ping_response = None
+    if hasattr(gpt2, "ping") and callable(getattr(gpt2, "ping")):
+        ping_response = await gpt2.ping()
+        logging.info(f"Model ping response: {ping_response}")
 
     # 2) Create socketpairs & open asyncio streams
     sock_a, sock_b = socket.socketpair()
@@ -63,6 +70,11 @@ async def run_module(Cli_Chat, GPT2Model):
 
     # 4) Monkey-patch our relay loop
     Cli_Chat.run_event_loop = run_event_loop
+    
+    # Send ping response to the user if available
+    if ping_response:
+        interface_writer.write((str(ping_response) + "\n").encode())
+        await interface_writer.drain()
 
     # 5) Define pump/loop tasks
     async def pump_stdin():
