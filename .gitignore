@@ -33,8 +33,10 @@ venv/
 .env
 
 # Backups
-bak/
+# ignore backup files
+*.sav
 *.bak
+bak/
 
 # IDE files
 .idea/
