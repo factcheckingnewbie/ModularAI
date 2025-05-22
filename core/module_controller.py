@@ -11,12 +11,24 @@ Features:
 import asyncio
 import json
 import logging
+import os
 import socket
 from asyncio import StreamReader, StreamWriter, CancelledError
 from typing import Dict, Any, Optional, Tuple, Set
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
+TRACE_LEVEL_NUM = 5
+logging.addLevelName(TRACE_LEVEL_NUM, "TRACE")
+def trace(self, msg, *args, **kwargs):
+    if self.isEnabledFor(TRACE_LEVEL_NUM):
+        self._log(TRACE_LEVEL_NUM, msg, args, **kwargs)
+logging.Logger.trace = trace
+
+# Env-driven log level (default DEBUG)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
+_LEVEL = getattr(logging, LOG_LEVEL, TRACE_LEVEL_NUM)
+logging.basicConfig(level=_LEVEL)
 logger = logging.getLogger(__name__)
 
 
@@ -194,6 +206,7 @@ class ModuleController:
                     if not self.model_writer.is_closing():
                         self.model_writer.write(data)
                         await self.model_writer.drain()
+                        logger.trace("Relayed %d bytes to model", len(data)) 
                     else:
                         logger.warning("Model writer closed, can't send data")
                         break
@@ -249,6 +262,8 @@ class ModuleController:
                     if not self.interface_writer.is_closing():
                         self.interface_writer.write(data)
                         await self.interface_writer.drain()
+                        logger.trace("Relayed %d bytes to interface", len(data))
+
                     else:
                         logger.warning("Interface writer closed, can't send data")
                         break
