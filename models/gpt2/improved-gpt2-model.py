@@ -18,7 +18,11 @@ from asyncio import StreamReader, StreamWriter, CancelledError, TimeoutError
 from typing import Dict, Any, Optional, Tuple
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 logger = logging.getLogger(__name__)
 
 class GPT2Model:

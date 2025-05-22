@@ -35,6 +35,7 @@ venv/
 # Backups
 bak/
 *.bak
+*.sav
 
 # IDE files
 .idea/
