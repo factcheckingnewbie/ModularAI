@@ -17,8 +17,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const core = require('@actions/core');
-
             // fetch this repository’s GraphQL node ID
             let repoId;
             try {
