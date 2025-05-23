@@ -1,11 +1,12 @@
 name: Disable Copilot PR Suggestions
 
-# triggers on any branch push
+# trigger on every branch push
 on:
   push:
 
-permissions:
-  administration: write  # needed to update repo settings via GraphQL
+# GITHUB_TOKEN defaults will allow repository mutations
+# (no explicit permissions: administration needed, and
+# ‘administration’ is not currently supported by the parser)
 
 jobs:
   disable-copilot-prs:
