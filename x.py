@@ -4,9 +4,11 @@ Core runner that ties a frontend interface and backend model together.
 Exposes a single async function `run_module` but does not execute on its own.
 """
 
+import sys
+import time
 import asyncio
 import socket
-
+import logging
 class DebugModule:
     """
     Debug harness to verify that model loading, ping, and
@@ -133,5 +135,6 @@ def main_debug():
     asyncio.run(debug.run_tests())
 
 if __name__ == "__main__":
+    debug = DebugModule(Cli_Chat, GPT2Model)
     main_debug()
 
