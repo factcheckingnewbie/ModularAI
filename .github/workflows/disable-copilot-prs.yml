@@ -20,7 +20,7 @@ jobs:
             // fetch this repository’s GraphQL node ID
             let repoId;
             try {
-              const { data } = await github.graphql(
+              const { repository } = await github.graphql(
                 `
                 query RepoID($owner:String!, $name:String!) {
                   repository(owner:$owner, name:$name) { id }
@@ -28,7 +28,7 @@ jobs:
                 `,
                 { owner: context.repo.owner, name: context.repo.repo }
               );
-              repoId = data.repository.id;
+              repoId = repository.id;
             } catch (error) {
               core.setFailed(`Failed to fetch repository ID: ${error.message}`);
               return;
