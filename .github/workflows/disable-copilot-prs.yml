@@ -1,10 +1,8 @@
 name: Disable Copilot PR Suggestions
+
+# triggers on any branch push
 on:
   push:
-    # You can restrict this to just your default branch if you like:
-    branches:
-      - main
-      - master
 
 permissions:
   administration: write  # needed to update repo settings via GraphQL
