@@ -16,28 +16,42 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const core = require('@actions/core');
+
             // fetch this repository’s GraphQL node ID
-            const { data } = await github.graphql(
-              `
-              query RepoID($owner:String!, $name:String!) {
-                repository(owner:$owner, name:$name) { id }
-              }
-              `,
-              { owner: context.repo.owner, name: context.repo.repo }
-            );
+            let repoId;
+            try {
+              const { data } = await github.graphql(
+                `
+                query RepoID($owner:String!, $name:String!) {
+                  repository(owner:$owner, name:$name) { id }
+                }
+                `,
+                { owner: context.repo.owner, name: context.repo.repo }
+              );
+              repoId = data.repository.id;
+            } catch (error) {
+              core.setFailed(`Failed to fetch repository ID: ${error.message}`);
+              return;
+            }
 
             // run the mutation to turn off copilotPullRequestsEnabled
-            await github.graphql(
-              `
-              mutation DisableCopilotPRs($id:ID!) {
-                updateRepository(
-                  input: { repositoryId: $id, copilotPullRequestsEnabled: false }
-                ) {
-                  repository { nameWithOwner }
+            try {
+              await github.graphql(
+                `
+                mutation DisableCopilotPRs($id:ID!) {
+                  updateRepository(
+                    input: { repositoryId: $id, copilotPullRequestsEnabled: false }
+                  ) {
+                    repository { nameWithOwner }
+                  }
                 }
-              }
-              `,
-              { id: data.repository.id }
-            );
+                `,
+                { id: repoId }
+              );
+            } catch (error) {
+              core.setFailed(`Failed to disable Copilot PR suggestions: ${error.message}`);
+              return;
+            }
 
             console.log(`✅ Copilot PRs disabled for ${context.repo.owner}/${context.repo.repo}`);
