@@ -51,7 +51,11 @@ class GPT2Model:
             "temperature": 0.7,
             "request_timeout": 30,  # Timeout for requests in seconds
         }
-    
+    def get_model_id(self) -> str:
+        """
+        Return the model ID used in config/model_modules.json.
+        """
+        return "gpt2"
     async def initialize(self, config: Optional[Dict[str, Any]] = None) -> bool:
         """
         Initialize the model with configuration parameters.

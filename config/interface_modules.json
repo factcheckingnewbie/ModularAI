@@ -1,0 +1,22 @@
+{
+  "interfaces": [
+    {
+      "id": "Cli_Chat",
+      "name": "Command Line chat Interface",
+      "path": "./interfaces/cli_chat_interface.py",
+      "description": "Command-line interface for gpt2 conversations",
+      "version": "1.0.0",
+      "author": "ModularAI Team",
+      "non_blocking": true,
+      "multiple_connections": true,
+      "compatibility": {
+        "required_capabilities": ["text_io"],
+        "optional_capabilities": ["structured_output"]
+      },
+      "parameters": {
+        "prompt_symbol": "> ",
+        "history_size": 100
+      }
+    }
+  ]
+}
