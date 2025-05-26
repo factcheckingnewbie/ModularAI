@@ -36,6 +36,7 @@ class DebugModule:
         logging.basicConfig(level=logging.INFO)
         self.InterfaceCls = InterfaceCls
         self.ModelCls = ModelCls
+
     async def run_tests(self):
         logging.info("*** DEBUG MODULE START ***")
 

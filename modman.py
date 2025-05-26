@@ -17,7 +17,7 @@ import logging
 
 from interfaces.cli_chat_interface import Cli_Chat
 from models.gpt2.gpt2_model import GPT2Model
-from x import DebugModule, run_module
+from modcon import DebugModule, run_module
 # --- instrumentation wrappers ---
 def main():
     # Configure logging
@@ -31,6 +31,7 @@ def main():
     # original behavior
     asyncio.run(run_module(Cli_Chat, GPT2Model))
 
+if __name__ == "__main__":
     main()
 # class MonitoredCli(Cli_Chat):
 #     def __init__(self, *args, **kwargs):
