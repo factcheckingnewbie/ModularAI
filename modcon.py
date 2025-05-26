@@ -9,63 +9,6 @@ import time
 import asyncio
 import socket
 import logging
-# class MonitoredCli(Cli_Chat):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)                                                                                                    
-#         # Print basic interface stats
-#         print(f"[Stats] Interface: {self.__class__.__name__}, prompt_symbol='{self.prompt_symbol}'")
-# 
-# class MonitoredModel(GPT2Model):
-#     async def load_model(self):
-#         # Time how long model loading takes
-#         start = time.time()
-#         ok = await super().load_model()
-#         elapsed = time.time() - start
-#         print(f"[Stats] Model load time: {elapsed:.2f}s")
-#         # Print any other relevant model attributes
-#         attrs = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
-#         print(f"[Stats] Model attributes: {attrs}")
-#         return ok
-
-class DebugModule:
-    """
-    Debug harness to verify that model loading, ping, and
-    raw-stream wiring behaves as expected.
-    """
-    def __init__(self, InterfaceCls, ModelCls):
-        logging.basicConfig(level=logging.INFO)
-        self.InterfaceCls = InterfaceCls
-        self.ModelCls = ModelCls
-
-    async def run_tests(self):
-        logging.info("*** DEBUG MODULE START ***")
-
-        # 1) Test model load performance
-        model = self.ModelCls()
-        start = time.time()
-        ok = await model.load_model()
-        elapsed = time.time() - start
-        logging.info(f"Model loaded success={ok}, time={elapsed:.2f}s")
-
-        # 2) Test ping if available
-        if hasattr(model, "ping") and asyncio.iscoroutinefunction(model.ping):
-            ping_resp = await model.ping()
-            logging.info(f"Model.ping() -> {ping_resp}")
-
-        # 3) Test socketpair streams
-        r_front, w_front, r_back, w_back = await create_streams()
-        test_msg = b"DEBUG_PAYLOAD"
-        # write into backend end, expect to read on frontend
-        w_back.write(test_msg)
-        await w_back.drain()
-        got = await r_front.read(len(test_msg))
-        logging.info(f"Stream loopback: sent {test_msg!r}, received {got!r}")
-
-        # 4) Instantiate interface to ensure no errors
-        interface = self.InterfaceCls(prompt_symbol="> ")
-        logging.info(f"Instantiated interface: {interface!r}")
-
-        logging.info("*** DEBUG MODULE END **")
 
 async def create_streams():
     """
@@ -148,11 +91,4 @@ async def run_module(InterfaceCls, ModelCls):
     await asyncio.gather(*pending, return_exceptions=True)
 
     print("👋 Goodbye!")
-def main_debug():
-    debug = DebugModule(Cli_Chat, GPT2Model)
-    asyncio.run(debug.run_tests())
-
-if __name__ == "__main__":
-    debug = DebugModule(Cli_Chat, GPT2Model)
-    main_debug()
 
