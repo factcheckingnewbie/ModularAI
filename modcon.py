@@ -9,6 +9,24 @@ import time
 import asyncio
 import socket
 import logging
+# class MonitoredCli(Cli_Chat):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)                                                                                                    
+#         # Print basic interface stats
+#         print(f"[Stats] Interface: {self.__class__.__name__}, prompt_symbol='{self.prompt_symbol}'")
+# 
+# class MonitoredModel(GPT2Model):
+#     async def load_model(self):
+#         # Time how long model loading takes
+#         start = time.time()
+#         ok = await super().load_model()
+#         elapsed = time.time() - start
+#         print(f"[Stats] Model load time: {elapsed:.2f}s")
+#         # Print any other relevant model attributes
+#         attrs = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
+#         print(f"[Stats] Model attributes: {attrs}")
+#         return ok
+
 class DebugModule:
     """
     Debug harness to verify that model loading, ping, and
@@ -18,7 +36,6 @@ class DebugModule:
         logging.basicConfig(level=logging.INFO)
         self.InterfaceCls = InterfaceCls
         self.ModelCls = ModelCls
-
     async def run_tests(self):
         logging.info("*** DEBUG MODULE START ***")
 

@@ -11,6 +11,7 @@ Usage:
 """
 
 import sys
+import time
 import asyncio
 import logging
 
@@ -30,7 +31,6 @@ def main():
     # original behavior
     asyncio.run(run_module(Cli_Chat, GPT2Model))
 
-if __name__ == "__main__":
     main()
 # class MonitoredCli(Cli_Chat):
 #     def __init__(self, *args, **kwargs):
