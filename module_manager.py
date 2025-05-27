@@ -9,7 +9,12 @@ import inspect
 import os
 import sys
 from pathlib import Path
-
+#### Heres should class from module comtrpööer be imported, 
+### Now module_comtroller is imported and the codules si connected from module-manager.
+### In future. only one nodule in turn shall be comnmected tyo modulecomtrollee and then mdouduöe_controller decides
+### whioch modules that shall be comnected. Tehere could also be that they are loaded , and waiting.
+### The wain could be for another module to connect, of ofr a signal that one module 
+### shall connect to the other. Teh signal could be from humanb interactiom, or something else 
 
 class ModuleManager:
     """
@@ -104,7 +109,13 @@ class ModuleManager:
         
         print("Maximum number of attempts reached. Interface selection failed.")
         return None
-        
+      ###  This menu shall be completely removed, unril later. 
+      ### I am not sure Iwant connection of two models to be hardcoded in module_manager. 
+      ### Module manager shall load one model onlym and the connection sahll be to module_controller. 
+      ###  Module_controller manages the connections, 
+
+        ### present model menu shall be entirey from the interface, whcich is connected to an adress at module_comtroller.
+        ### Thi memu is rubbish, 
     async def present_model_menu(self):
         """
         Present menu for the user to select an AI model.
@@ -305,6 +316,9 @@ class ModuleManager:
         # No matching interface found, try to find a usable class
         main_classes = []
         for name, cls in inspect.getmembers(module, inspect.isclass):
+#####
+###
+####
             if name == 'CliChatGpt':  # Known class from file inspection
                 try:
                     instance = cls()
