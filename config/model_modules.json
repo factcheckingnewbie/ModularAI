@@ -4,7 +4,7 @@
       "id": "gpt2",
       "name": "GPT-2 Model",
       "path": "./models/gpt2/gpt2_model.py",
-      "description": "GPT-2 based AI model for text generation",
+      "description": "GPT-3 based AI model for text generation",
       "version": "1.0.0",
       "author": "ModularAI Team",
       "non_blocking": true,

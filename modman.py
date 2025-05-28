@@ -12,7 +12,7 @@ import logging
 
 from interfaces.cli_chat_interface import Cli_Chat
 from models.gpt2.gpt2_model import GPT2Model
-from modcon import run_module
+from modcontst import run_module
 def main():
 
     asyncio.run(run_module(Cli_Chat, GPT2Model))
