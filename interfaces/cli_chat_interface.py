@@ -1,16 +1,3 @@
-print("DEBUG: cli_chat_interface.py loaded")
-import traceback
-traceback.print_stack()
-#!/usr/bin/env python3
-"""
-Command-line interface for user interaction.
-
-Features:
-- Presents interface menu
-- Handles non-blocking user input
-- Can support multiple simultaneous connections
-"""
-
 import asyncio
 import json
 import sys
@@ -73,23 +60,22 @@ class Cli_Chat:
         }
         
     async def display_welcome(self):
-       """Display welcome message and basic instructions."""
-    print("I ALLEADY ADD AN X, SO DEBUG IS NOT NEEDE, BUT HERE IT IS BECAUSE YOU SAY SO!!!")
-    welcome = """
-╔══════X══════════════════════════════════════════════════╗
-║                 ModdularAI Chat Interface              ║
-╠═══════X═════════════════════════════════════════════════╣
-║ Commands:                                              ║
-║  /help           - Show this help message              ║
-║  /quit, /exit    - Exit the program                    ║
-║  /models         - List connected models               ║
-║  /switch <id>    - Switch to a different model         ║
-║  /clear          - Clear the screen                    ║
-║                                                        ║
-║ Any other input will be sent to the active AI model.   ║
-╚═══════X═════════════════════════════════════════════════╝
-"""
-    print(welcome)
+        """Display welcome message and basic instructions."""
+        welcome = """
+         ╔════════════════════════════════════════════════════════╗
+         ║                 ModdularAI Chat Interface              ║
+         ╠════════════════════════════════════════════════════════╣
+         ║ Commands:                                              ║
+         ║  /help           - Show this help message              ║
+         ║  /quit, /exit    - Exit the program                    ║
+         ║  /models         - List connected models               ║
+         ║  /switch <id>    - Switch to a different model         ║
+         ║  /clear          - Clear the screen                    ║
+         ║                                                        ║
+         ║ Any other input will be sent to the active AI model.   ║
+         ╚════════════════════════════════════════════════════════╝
+         """
+        print(welcome)
         
     async def display_prompt(self):
         """Display command prompt to the user."""
