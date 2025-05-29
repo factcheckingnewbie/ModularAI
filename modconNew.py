@@ -76,6 +76,7 @@ async def run_module(InterfaceCls, ModelCls):
     # 5) Interface receives the model's capabilities message first
     capabilities_msg = await interface.reader.readline()
     print("Controller received model capabilities:", capabilities_msg.decode().strip())
+    await interface.setup_streams(interface_reader, interface_writer)
     await interface.run()
     # 6) Set up bidirectional pumps for ongoing communication (optional, legacy support)
     # If you want to pump raw bytes concurrently, uncomment below:
