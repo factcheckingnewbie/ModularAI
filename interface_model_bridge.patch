@@ -1,0 +1,40 @@
+--- a/interface_model_bridge.py
++++ b/interface_model_bridge.py
+@@ -41,13 +41,23 @@
+ async def run_event_loop(self, logger):
+     try:
+         user_input = await asyncio.to_thread(input, self.prompt_symbol)
+     except EOFError:
+         return False
+
+     if not user_input or user_input.strip().lower() in ("exit", "quit"):
+         return False
+
+-    json_obj = is_json(user_input)
+-    if json_obj is not None:
+-        logger.log(f'JSON expected: {json.dumps(json_obj)}')
+-        logger.log(f'JSON sent: {json.dumps(json_obj)}')
+-    else:
+-        logger.log(f'String expected: {user_input}')
+-        logger.log(f'String sent: {user_input}')
++    json_obj = is_json(user_input)
++    if json_obj is not None:
++        logger.log(f'JSON expected: {json.dumps(json_obj)}')
++        logger.log(f'JSON sent: {json.dumps(json_obj)}')
++        logger.log('JSON expected: <json>')
++    else:
++        logger.log(f'String expected: {user_input}')
++        logger.log(f'String sent: {user_input}')
++        logger.log('String expected: <string>')
+
+     response = self._gpt2.generator(user_input, max_length=100)
+     if isinstance(response, list) and response and "generated_text" in response[0]:
+         reply = response[0]["generated_text"]
+     else:
+         reply = str(response)
+
+     reply_json = is_json(reply)
+     if reply_json is not None:
+         logger.log(f'JSON received: {json.dumps(reply_json)}')
+     else:
+         logger.log(f'String received: {reply}')
