@@ -283,7 +283,7 @@ class GPT2Model:
             
             # Validate message type
             message_type = request.get("message_type", "text_generation")
-            
+
             # Handle different message types
             if message_type == "text_generation":
                 await self.handle_text_generation(request)
@@ -293,9 +293,29 @@ class GPT2Model:
                 await self.handle_ping(request)
             elif message_type == "shutdown":
                 await self.handle_shutdown(request)
+            elif message_type == "error":
+                logger.warning(f"Received error message from interface/controller: {request}")
+                # Do not call handle_error again to avoid infinite loops
+                return
             else:
                 logger.warning(f"Unknown message type: {message_type}")
                 await self.handle_error(f"Unknown message type: {message_type}", request.get("request_id"))
+            
+#            # Handle different message types
+#            if message_type == "text_generation":
+#                await self.handle_text_generation(request)
+#            elif message_type == "compatibility_check":
+#                await self.handle_compatibility_check(request)
+#            elif message_type == "ping":
+#                await self.handle_ping(request)
+#            elif message_type == "shutdown":
+#                await self.handle_shutdown(request)
+#            else:
+#                logger.warning(f"Unknown message type: {message_type}")
+#                await self.handle_error(f"Unknown message type: {message_type}", request.get("request_id"))
+
+
+
                 
         except CancelledError:
             # Properly handle task cancellation

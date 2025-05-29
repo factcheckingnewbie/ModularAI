@@ -7,14 +7,14 @@ from datetime import datetime
 from models.gpt2.gpt2_model import GPT2Model
 from interfaces.cli_chat_interface import Cli_Chat
 
-gpt2_model = GPT2Model()
-cli_interface = Cli_Chat(prompt_symbol="> ")
-
-# Print to confirm
-print("Model instance:", gpt2_model)
-print("Interface instance:", cli_interface)
-
-exit()
+## gpt2_model = GPT2Model()
+## cli_interface = Cli_Chat(prompt_symbol="> ")
+## 
+## # Print to confirm
+## print("Model instance:", gpt2_model)
+## print("Interface instance:", cli_interface)
+## 
+## exit()
 
 
 # ensure project root is on PYTHONPATH so 'interfaces' can be imported
