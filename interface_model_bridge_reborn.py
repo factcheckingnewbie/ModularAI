@@ -36,31 +36,69 @@ def wire_components(interface, model, interface_reader, interface_writer, model_
     model.writer = model_writer
 
 async def main():
-    # Try to create streams
-  # Instantiate
+    # Instantiate components
     gpt2_model = GPT2Model()
     cli_interface = Cli_Chat(prompt_symbol="> ")
     # Create streams
     interface_reader, interface_writer, model_reader, model_writer = await create_streams()
     # Wire components
     wire_components(cli_interface, gpt2_model, interface_reader, interface_writer, model_reader, model_writer)
-    
     # Print attributes to confirm
-    print("Interface.reader:", cli_interface.reader)
-    print("Interface.writer:", cli_interface.writer)
-    print("Model.reader:", gpt2_model.reader)
-    print("Model.writer:", gpt2_model.writer)
+#    print("Interface.reader:", cli_interface.reader)
+#    print("Interface.writer:", cli_interface.writer)
+#    print("Model.reader:", gpt2_model.reader)
+#    print("Model.writer:", gpt2_model.writer)
 
+    # Start the model's run loop in the background (IMPORTANT!)
+    model_task = asyncio.create_task(gpt2_model.run())
 
-    # After wiring...
+    # Send a valid JSON message (text generation request) from the "interface" to the model
+    prompt = "Hello, world!"
+    request = {
+        "message_type": "text_generation",
+        "prompt": prompt,
+        "request_id": "test1"
+    }
+    json_msg = json.dumps(request) + "\n"
+    cli_interface.writer.write(json_msg.encode("utf-8"))
     await cli_interface.writer.drain()
-    cli_interface.writer.write(b"hello model\n")
-    await cli_interface.writer.drain()
-    msg = await gpt2_model.reader.readline()
-    print("Model received:", msg)
-    
-    
-    # Clean up (close writers)
+
+    # Read the model's response from the interface's reader
+    response = await cli_interface.reader.readline()
+    print("Interface received:", response.decode())
+
+    # Clean up (cancel the model task, close writers)
+    model_task.cancel()
+    try:
+        await model_task
+    except asyncio.CancelledError:
+        pass
+
+#    # Try to create streams
+#  # Instantiate
+#    gpt2_model = GPT2Model()
+#    cli_interface = Cli_Chat(prompt_symbol="> ")
+#    # Create streams
+#    interface_reader, interface_writer, model_reader, model_writer = await create_streams()
+#    # Wire components
+#    wire_components(cli_interface, gpt2_model, interface_reader, interface_writer, model_reader, model_writer)
+#    
+#    # Print attributes to confirm
+#    print("Interface.reader:", cli_interface.reader)
+#    print("Interface.writer:", cli_interface.writer)
+#    print("Model.reader:", gpt2_model.reader)
+#    print("Model.writer:", gpt2_model.writer)
+#
+#
+#    # After wiring...
+#    await cli_interface.writer.drain()
+#    cli_interface.writer.write(b"hello model\n")
+#    await cli_interface.writer.drain()
+#    msg = await gpt2_model.reader.readline()
+#    print("Model received:", msg)
+#    
+#    
+#    # Clean up (close writers)
     interface_writer.close()
     model_writer.close()
     await interface_writer.wait_closed()
