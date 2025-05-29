@@ -76,7 +76,7 @@ async def run_module(InterfaceCls, ModelCls):
     # 5) Interface receives the model's capabilities message first
     capabilities_msg = await interface.reader.readline()
     print("Controller received model capabilities:", capabilities_msg.decode().strip())
-
+    await interface.run()
     # 6) Set up bidirectional pumps for ongoing communication (optional, legacy support)
     # If you want to pump raw bytes concurrently, uncomment below:
     # task_frontend = asyncio.create_task(pump(interface.reader, interface.writer))
@@ -88,5 +88,3 @@ async def run_module(InterfaceCls, ModelCls):
     # for t in pending:
     #     t.cancel()
     # await asyncio.gather(*pending, return_exceptions=True)
-
-    print("👋 Goodbye!")
