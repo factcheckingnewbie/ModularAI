@@ -1,3 +1,6 @@
+print("DEBUG: cli_chat_interface.py loaded")
+import traceback
+traceback.print_stack()
 #!/usr/bin/env python3
 """
 Command-line interface for user interaction.
@@ -70,11 +73,12 @@ class Cli_Chat:
         }
         
     async def display_welcome(self):
-        """Display welcome message and basic instructions."""
-        welcome = """
-╔════════════════════════════════════════════════════════╗
-║                 ModdularAI Chat Interface               ║
-╠════════════════════════════════════════════════════════╣
+       """Display welcome message and basic instructions."""
+    print("I ALLEADY ADD AN X, SO DEBUG IS NOT NEEDE, BUT HERE IT IS BECAUSE YOU SAY SO!!!")
+    welcome = """
+╔══════X══════════════════════════════════════════════════╗
+║                 ModdularAI Chat Interface              ║
+╠═══════X═════════════════════════════════════════════════╣
 ║ Commands:                                              ║
 ║  /help           - Show this help message              ║
 ║  /quit, /exit    - Exit the program                    ║
@@ -83,9 +87,9 @@ class Cli_Chat:
 ║  /clear          - Clear the screen                    ║
 ║                                                        ║
 ║ Any other input will be sent to the active AI model.   ║
-╚════════════════════════════════════════════════════════╝
+╚═══════X═════════════════════════════════════════════════╝
 """
-        print(welcome)
+    print(welcome)
         
     async def display_prompt(self):
         """Display command prompt to the user."""
@@ -350,8 +354,8 @@ class Cli_Chat:
         Main execution loop for the CLI interface.
         Manages input handling and response receiving concurrently.
         """
-        # Display welcome message
-        await self.display_welcome()
+        # Display help message
+#        await self.display_welcome()
         
         try:
             # Create tasks for input handling and receiving from models
