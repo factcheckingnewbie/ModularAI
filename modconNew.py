@@ -53,8 +53,8 @@ async def run_module(InterfaceCls, ModelCls):
     """
     Instantiate and wire up frontend interface & backend model, then shuttle raw data.
     """
-    # 1) Instantiate and load model
-#    model = ModelCls()
+ # 1) Instantiate and load model
+    model = ModelCls()
 #    ok = await model.load_model()
 #    if not ok:
 #        print("❌ Model failed to load.")
