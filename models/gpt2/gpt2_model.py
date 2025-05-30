@@ -10,16 +10,26 @@ Features:
 - Proper resource management
 - Robust error handling and cancellation support
 """
-
+import os
+import datetime
 import asyncio
 import json
 import logging
 from asyncio import StreamReader, StreamWriter, CancelledError, TimeoutError
 from typing import Dict, Any, Optional, Tuple
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to a file in the module's directory, named by timestamp
+logdir = os.path.dirname(os.path.abspath(__file__))
+logfile = os.path.join(logdir, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".log")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
+    handlers=[logging.FileHandler(logfile), logging.StreamHandler()]
+)
+
 logger = logging.getLogger(__name__)
+
+
 
 class GPT2Model:
     """
@@ -96,7 +106,7 @@ class GPT2Model:
                 None, 
                 lambda: pipeline('text-generation', model='gpt2')
             )
-            logger.info("Model loaded successfully")
+            logger.info("transformers pipeline object initialized (model weights not guaranteed loaded yet)")
             return True
         except Exception as e:
             logger.error(f"Error loading model: {e}", exc_info=True)
@@ -104,16 +114,13 @@ class GPT2Model:
             return False
     
     def set_streams(self, reader: StreamReader, writer: StreamWriter) -> None:
-        """
-        Set the StreamReader and StreamWriter for communication.
-        
-        Args:
-            reader: StreamReader instance for receiving data
-            writer: StreamWriter instance for sending data
-        """
         self.reader = reader
         self.writer = writer
-    
+        logger.info(f"Streams received: reader={reader}, writer={writer}")
+        if not self.reader or not self.writer:
+            logger.error("Stream assignment failed: reader or writer is None")
+            return
+
     async def verify_controller_compatibility(self, controller_version: str) -> Tuple[bool, str]:
         """
         Check compatibility with the module controller.
@@ -181,8 +188,11 @@ class GPT2Model:
             capability_json = json.dumps(capability_info) + '\n'
             self.writer.write(capability_json.encode('utf-8'))
             await self.writer.drain()
-            
-            logger.info("Sent capability information")
+
+            logger.info("Sending capabilities handshake")
+            logger.info("Sent capabilities handshake")
+            logger.info("Ready to operate: Streams and handshake complete") 
+            logger.info("Sent capability information   ")
         except Exception as e:
             logger.error(f"Error advertising capabilities: {e}", exc_info=True)
     
@@ -196,7 +206,7 @@ class GPT2Model:
             bool: True if exited normally, False if error occurred
         """
         if not self.reader or not self.writer:
-            logger.error("Error: Streams not set")
+            #logger.error("Error: Streams not set")
             return False
         
         # Set running flag    
@@ -257,7 +267,6 @@ class GPT2Model:
                     await asyncio.gather(*self.tasks, return_exceptions=True)
                 except Exception as e:
                     logger.error(f"Error waiting for tasks to complete: {e}", exc_info=True)
-            
             logger.info("Model processing loop ended")
     
     async def process_request(self, data: bytes) -> None:
@@ -311,7 +320,7 @@ class GPT2Model:
 #            elif message_type == "shutdown":
 #                await self.handle_shutdown(request)
 #            else:
-#                logger.warning(f"Unknown message type: {message_type}")
+#                #logger.warning(f"Unknown message type: {message_type}")
 #                await self.handle_error(f"Unknown message type: {message_type}", request.get("request_id"))
 
 
@@ -459,7 +468,7 @@ class GPT2Model:
         
         # If critical error, initiate shutdown
         if is_critical:
-            logger.critical(f"Critical error: {error_message}")
+            #logger.critical(f"Critical error: {error_message}")
             await self.notify_controller_error(error_message)
             asyncio.create_task(self.shutdown())
     
@@ -534,7 +543,7 @@ class GPT2Model:
             response: Dictionary containing the response data
         """
         if not self.writer:
-            logger.error("Error: Writer not set")
+            #logger.error("Error: Writer not set")
             return
             
         try:
@@ -553,7 +562,7 @@ class GPT2Model:
     
     async def shutdown(self) -> None:
         """Shutdown the model gracefully."""
-        logger.info("Shutting down model")
+        #logger.info("Shutting down model")
         self.running = False
         
         # Cancel all pending tasks
