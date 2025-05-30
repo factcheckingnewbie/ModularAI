@@ -230,11 +230,13 @@ class ModuleController:
         """
         try:
             logger.info("Starting relay from model to interface")
+            # Ensure only one coroutine ever reads from model_reader at a time
+            self._relay_model_reader_lock = getattr(self, "_relay_model_reader_lock", None) or asyncio.Lock()
             
             while self.running and not self.model_reader.at_eof():
                 try:
-                    # Read a line from model
-                    data = await self.model_reader.readline()
+                    async with self._relay_model_reader_lock:
+                        data = await self.model_reader.readline()
                     if not data:
                         logger.info("Model EOF received")
                         self.running = False  # Signal other tasks to terminate
