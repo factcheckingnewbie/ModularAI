@@ -27,7 +27,7 @@ class ModuleController:
     """
     
     # Protocol version for compatibility checking
-    PROTOCOL_VERSION = "0.0.1"
+    PROTOCOL_VERSION = "1.0.0"
     
     def __init__(self):
         self.interface = None
@@ -98,14 +98,14 @@ class ModuleController:
             self.interface_reader, self.interface_writer = await asyncio.open_connection(sock=sock_a)
             self.model_reader, self.model_writer = await asyncio.open_connection(sock=sock_b)
 
-           # Attach streams as attributes for interface/model compatibility
-           if self.interface is not None:
-               self.interface.reader = self.interface_reader
-               self.interface.writer = self.interface_writer
-           if self.model is not None:
-               self.model.reader = self.model_reader
-               self.model.writer = self.model_writer
-            
+            # Attach streams as attributes for interface/model compatibility
+            if self.interface is not None:
+                self.interface.reader = self.interface_reader
+                self.interface.writer = self.interface_writer
+            if self.model is not None:
+                self.model.reader = self.model_reader
+                self.model.writer = self.model_writer
+             
             # Create socket pairs for bidirectional communication
 #           sock1, sock2 = socket.socketpair()            
             # Create asyncio streams from sockets
