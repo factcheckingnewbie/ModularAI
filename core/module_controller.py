@@ -113,11 +113,6 @@ class ModuleController:
                 if hasattr(self.interface, "setup_streams"):
                     await self.interface.setup_streams(self.interface_reader, self.interface_writer)
              
-            # Create socket pairs for bidirectional communication
-#           sock1, sock2 = socket.socketpair()            
-            # Create asyncio streams from sockets
-#           self.model_reader, self.interface_writer = await asyncio.open_connection(sock=sock1)
-#           self.interface_reader, self.model_writer = await asyncio.open_connection(sock=sock2)
             
             # Set streams for model
             if hasattr(self.model, 'set_streams'):
