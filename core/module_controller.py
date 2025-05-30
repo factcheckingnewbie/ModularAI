@@ -92,13 +92,25 @@ class ModuleController:
         """
         try:
             logger.info("Establishing communication streams")
+           
+            
+            sock_a, sock_b = socket.socketpair()
+            self.interface_reader, self.interface_writer = await asyncio.open_connection(sock=sock_a)
+            self.model_reader, self.model_writer = await asyncio.open_connection(sock=sock_b)
+
+           # Attach streams as attributes for interface/model compatibility
+           if self.interface is not None:
+               self.interface.reader = self.interface_reader
+               self.interface.writer = self.interface_writer
+           if self.model is not None:
+               self.model.reader = self.model_reader
+               self.model.writer = self.model_writer
             
             # Create socket pairs for bidirectional communication
-            sock1, sock2 = socket.socketpair()
-            
+#           sock1, sock2 = socket.socketpair()            
             # Create asyncio streams from sockets
-            self.model_reader, self.interface_writer = await asyncio.open_connection(sock=sock1)
-            self.interface_reader, self.model_writer = await asyncio.open_connection(sock=sock2)
+#           self.model_reader, self.interface_writer = await asyncio.open_connection(sock=sock1)
+#           self.interface_reader, self.model_writer = await asyncio.open_connection(sock=sock2)
             
             # Set streams for model
             if hasattr(self.model, 'set_streams'):
