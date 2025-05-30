@@ -577,8 +577,10 @@ class GPT2Model:
         """Close the connection and clean up resources."""
         if self.writer:
             try:
-                self.writer.close()
-                await self.writer.wait_closed()
+                writer = self.writer
+                self.writer = None
+                writer.close()
+                await writer.wait_closed()
             except Exception as e:
                 logger.error(f"Error closing writer: {e}", exc_info=True)
         

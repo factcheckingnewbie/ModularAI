@@ -23,7 +23,6 @@ async def create_streams():
     model_reader, model_writer = await asyncio.open_connection(sock=sock_b)
     return interface_reader, interface_writer, model_reader, model_writer
 
-# "kontroll occh inkomstuppgifter för 2024"
 def wire_components(interface, model, interface_reader, interface_writer, model_reader, model_writer):
     """
     Attach raw stream endpoints to the interface and model objects.

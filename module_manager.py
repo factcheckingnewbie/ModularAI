@@ -316,9 +316,6 @@ class ModuleManager:
         # No matching interface found, try to find a usable class
         main_classes = []
         for name, cls in inspect.getmembers(module, inspect.isclass):
-#####
-###
-####
             if name == 'CliChatGpt':  # Known class from file inspection
                 try:
                     instance = cls()
