@@ -23,6 +23,7 @@ async def create_streams():
     model_reader, model_writer = await asyncio.open_connection(sock=sock_b)
     return interface_reader, interface_writer, model_reader, model_writer
 
+# "kontroll occh inkomstuppgifter för 2024"
 def wire_components(interface, model, interface_reader, interface_writer, model_reader, model_writer):
     """
     Attach raw stream endpoints to the interface and model objects.
@@ -34,7 +35,6 @@ def wire_components(interface, model, interface_reader, interface_writer, model_
     # Model uses its own reader/writer for controller<->model
     model.reader = model_reader
     model.writer = model_writer
-
 async def pump(src_reader, dst_writer):
     """
     Generic raw‐byte pump: read chunks from src_reader and write them to dst_writer.
@@ -53,13 +53,13 @@ async def run_module(InterfaceCls, ModelCls):
     """
     Instantiate and wire up frontend interface & backend model, then shuttle raw data.
     """
- # 1) Instantiate and load model
+    # 1) Instantiate and load model
     model = ModelCls()
-#    ok = await model.load_model()
-#    if not ok:
-#        print("❌ Model failed to load.")
-#        return
-#    print("✅ Model loaded.\n")
+    ok = await model.load_model()
+    if not ok:
+        print("❌ Model failed to load.")
+        return
+    print("✅ Model loaded.\n")
 
     # 2) Build raw streams
     interface_reader, interface_writer, model_reader, model_writer = await create_streams()
@@ -72,11 +72,12 @@ async def run_module(InterfaceCls, ModelCls):
 
     # 4) Start the model's run loop in the background
     model_task = asyncio.create_task(model.run())
-    # Read capabilities message from model before starting model.run()
-    capabilities_msg = await model_reader.readline()
-    print("Controller received model capabilities:", capabilities_msg.decode().strip())
-    model_task = asyncio.create_task(model.run())
 
+    # 5) Interface receives the model's capabilities message first
+    capabilities_msg = await interface.reader.readline()
+    print("Controller received model capabilities:", capabilities_msg.decode().strip())
+    await interface.setup_streams(interface_reader, interface_writer)
+    await interface.run()
     # 6) Set up bidirectional pumps for ongoing communication (optional, legacy support)
     # If you want to pump raw bytes concurrently, uncomment below:
     # task_frontend = asyncio.create_task(pump(interface.reader, interface.writer))

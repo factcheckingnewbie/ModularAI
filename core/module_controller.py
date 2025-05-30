@@ -11,36 +11,14 @@ Features:
 import asyncio
 import json
 import logging
-import os
 import socket
 from asyncio import StreamReader, StreamWriter, CancelledError
 from typing import Dict, Any, Optional, Tuple, Set
 
 # Set up logging
-# logging.basicConfig(level=logging.DEBUG)
-TRACE_LEVEL_NUM = 5
-logging.addLevelName(TRACE_LEVEL_NUM, "TRACE")
-def trace(self, msg, *args, **kwargs):
-    if self.isEnabledFor(TRACE_LEVEL_NUM):
-        self._log(TRACE_LEVEL_NUM, msg, args, **kwargs)
-logging.Logger.trace = trace
-
-# Env-driven log level (default DEBUG)
-LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
-_LEVEL = getattr(logging, LOG_LEVEL, TRACE_LEVEL_NUM)
-logging.basicConfig(level=_LEVEL)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# ─── Monkey-patch StreamWriter.__del__ to ignore missing _transport ────────
-_SW = StreamWriter
-_orig_SW_del = _SW.__del__
-def _safe_SW_del(self):
-    try:
-        _orig_SW_del(self)
-    except AttributeError:
-        pass
-_SW.__del__ = _safe_SW_del
 
 class ModuleController:
     """
@@ -49,7 +27,7 @@ class ModuleController:
     """
     
     # Protocol version for compatibility checking
-    PROTOCOL_VERSION = "1.0.0"
+    PROTOCOL_VERSION = "0.0.1"
     
     def __init__(self):
         self.interface = None
@@ -78,7 +56,8 @@ class ModuleController:
         except Exception as e:
             logger.error(f"Error connecting to interface: {e}", exc_info=True)
             return False
-    
+        print("Interface connection point")
+        exit()
     async def connect_model(self, model) -> bool:
         """
         Args:
@@ -127,14 +106,7 @@ class ModuleController:
             else:
                 logger.error("Model does not implement set_streams method")
                 return False
-            # ─── Fix for StreamWriter.__del_ missing _transport ──────────────
-            # Ensure both writers carry a _transport attribute so Python's
-            # StreamWriter.__del__ won't crash when cleaning up.
-#            for writer in (self.model_writer, self.interface_writer):
-#                if not hasattr(writer, "_transport"):
-#                    # Prefer the real transport if exposed
-#                    transport = getattr(writer, "transport", None)
-#                    writer._transport = transport if transport is not None else writer          
+            
             logger.info("Communication streams established successfully")
             return True
             
@@ -189,21 +161,12 @@ class ModuleController:
         Non-blocking implementation using asyncio.
         """
         try:
-#            logger.info("Starting relay from interface to model")
-            logger.debug(
-                "Starting relay from interface to model | running=%s interface_reader.at_eof=%s model_writer.is_closing=%s",
-                self.running,
-                self.interface_reader.at_eof() if self.interface_reader else None,
-                self.model_writer.is_closing()    if self.model_writer    else None,
-            )            
+            logger.info("Starting relay from interface to model")
+            
             while self.running and not self.interface_reader.at_eof():
                 try:
                     # Read a line from interface
                     data = await self.interface_reader.readline()
-                    logger.trace("From interface (%d bytes): %r",
-                                 len(data),
-                                 data.decode('utf-8', errors='replace'))
-
                     if not data:
                         logger.info("Interface EOF received")
                         self.running = False  # Signal other tasks to terminate
@@ -226,10 +189,7 @@ class ModuleController:
                     # Write to model
                     if not self.model_writer.is_closing():
                         self.model_writer.write(data)
-#                        logger.trace("Relayed %d bytes to model", len(data)) 
-                        self.model_writer.write(data)
                         await self.model_writer.drain()
-                        # TRACE: sent to
                     else:
                         logger.warning("Model writer closed, can't send data")
                         break
@@ -285,8 +245,6 @@ class ModuleController:
                     if not self.interface_writer.is_closing():
                         self.interface_writer.write(data)
                         await self.interface_writer.drain()
-                        logger.trace("Relayed %d bytes to interface", len(data))
-
                     else:
                         logger.warning("Interface writer closed, can't send data")
                         break
@@ -402,25 +360,13 @@ class ModuleController:
                 logger.error(f"Error waiting for tasks: {e}", exc_info=True)
         
         # Close writers
-##        if self.model_writer and not self.model_writer.is_closing():
-##            try:
-##                self.model_writer.close()
-##                await asyncio.sleep(0.1)  # Brief pause to allow closure
-##            except Exception as e:
-##                logger.error(f"Error closing model writer: {e}", exc_info=True)
-
         if self.model_writer and not self.model_writer.is_closing():
             try:
                 self.model_writer.close()
-                # Await proper shutdown if supported
-                try:
-                    await self.model_writer.wait_closed()
-                except (AttributeError, RuntimeError):
-                    # Fallback for older streams or closed loops
-                    await asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)  # Brief pause to allow closure
             except Exception as e:
                 logger.error(f"Error closing model writer: {e}", exc_info=True)
-                 
+                
         if self.interface_writer and not self.interface_writer.is_closing():
             try:
                 self.interface_writer.close()
@@ -443,4 +389,6 @@ class ModuleController:
         self.model_reader = None
         self.model_writer = None
         self.tasks.clear()
+        
         logger.info("Module controller shutdown complete")
+
