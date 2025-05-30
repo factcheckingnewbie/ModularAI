@@ -206,38 +206,39 @@ class Cli_Chat:
         Non-blocking implementation.
         """
         try:
+            reading_tasks = {}
             while self.running:
-                # Process messages from all connected models
-                for model_id, model_info in list(self.connected_models.items()):
-                    reader = model_info["reader"]
-                    
-                    # Check if there's data available
-                    if not reader.at_eof():
+                for model_id in list(reading_tasks):
+                    task = reading_tasks[model_id]
+                    if task.done():
                         try:
-                            # Try to read a line with a short timeout
-                            data = await asyncio.wait_for(reader.readline(), timeout=0.1)
-                            
+                            data = task.result()
                             if data:
-                                # Process the response
                                 await self.handle_model_response(model_id, data)
-                            elif reader.at_eof():
-                                # Model disconnected
-                                print(f"\nModel {model_info.get('name', model_id)} disconnected.")
-                                await self.remove_model(model_id)
                         except asyncio.TimeoutError:
-                            # No data available yet, continue to next model
-                            continue
+                            pass
                         except Exception as e:
                             print(f"\nError receiving from model {model_id}: {e}")
-                
-                # Small delay to prevent CPU hogging
-                await asyncio.sleep(0.1)
-                
+                        reading_tasks.pop(model_id)
+                for model_id, model_info in list(self.connected_models.items()):
+                    if model_id not in reading_tasks:
+                        reader = model_info["reader"]
+                        if not reader.at_eof():
+                            reading_tasks[model_id] = asyncio.create_task(
+                                asyncio.wait_for(reader.readline(), timeout=0.1)
+                            )
+                        elif reader.at_eof():
+                            print(f"\nModel {model_info.get('name', model_id)} disconnected.")
+                            await self.remove_model(model_id)
+                await asyncio.sleep(0.01)
         except asyncio.CancelledError:
             print("\nReceiver task cancelled.")
         except Exception as e:
-            print(f"\nError in receiver loop: {e}")
-        
+            print(f"\nError in receiver loop: {e}")       
+
+
+
+ 
     async def handle_model_response(self, model_id, data):
         """
         Handle and display a response from an AI model.
