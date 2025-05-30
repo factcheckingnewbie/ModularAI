@@ -107,7 +107,6 @@ class ModuleController:
                 self.model.writer = self.model_writer
              # Start the model's run loop in the background so it can send capabilities
             if hasattr(self.model, "run") and callable(self.model.run):
-                import asyncio
                 asyncio.create_task(self.model.run())
             # Interface expects a capabilities message from model before continuing
             if hasattr(self.interface_reader, "readline"):
