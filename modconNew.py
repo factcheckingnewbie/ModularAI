@@ -72,11 +72,10 @@ async def run_module(InterfaceCls, ModelCls):
 
     # 4) Start the model's run loop in the background
     model_task = asyncio.create_task(model.run())
-
+    # Read capabilities message from model before starting model.run()
     capabilities_msg = await model_reader.readline()
     print("Controller received model capabilities:", capabilities_msg.decode().strip())
-    await interface.setup_streams(interface_reader, interface_writer)
-    await interface.run()
+    model_task = asyncio.create_task(model.run())
 
     # 6) Set up bidirectional pumps for ongoing communication (optional, legacy support)
     # If you want to pump raw bytes concurrently, uncomment below:

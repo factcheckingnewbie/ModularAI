@@ -1,0 +1,71 @@
+INFO:models.gpt2.gpt2_model:Loading GPT-2 model...
+Traceback (most recent call last):
+  File "/usr/lib64/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.13/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/home/ptr/Developement/guided/ModularAI/modconNew.py", line 58, in run_module
+    ok = await model.load_model()
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ptr/Developement/guided/ModularAI/models/gpt2/gpt2_model.py", line 95, in load_model
+    self.generator = await loop.run_in_executor(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib64/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.13/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ptr/Developement/guided/ModularAI/modman.py", line 26, in <module>
+    main()
+    ~~~~^^
+  File "/home/ptr/Developement/guided/ModularAI/modman.py", line 24, in main
+    asyncio.run(run_module(Cli_Chat, GPT2Model))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.13/asyncio/runners.py", line 194, in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.13/asyncio/runners.py", line 62, in __exit__
+    self.close()
+    ~~~~~~~~~~^^
+  File "/usr/lib64/python3.13/asyncio/runners.py", line 72, in close
+    loop.run_until_complete(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        loop.shutdown_default_executor(constants.THREAD_JOIN_TIMEOUT))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.13/asyncio/base_events.py", line 706, in run_until_complete
+    self.run_forever()
+    ~~~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.13/asyncio/base_events.py", line 677, in run_forever
+    self._run_once()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.13/asyncio/base_events.py", line 1996, in _run_once
+    event_list = self._selector.select(timeout)
+  File "/usr/lib64/python3.13/selectors.py", line 452, in select
+    fd_event_list = self._selector.poll(timeout, max_ev)
+KeyboardInterrupt
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/usr/lib64/python3.13/threading.py", line 1534, in _shutdown
+    atexit_call()
+  File "/usr/lib64/python3.13/threading.py", line 1505, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/usr/lib64/python3.13/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/usr/lib64/python3.13/threading.py", line 1092, in join
+    self._handle.join(timeout)
+KeyboardInterrupt: 
