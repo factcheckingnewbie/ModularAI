@@ -26,14 +26,14 @@ async def create_streams():
 def wire_components(interface, model, interface_reader, interface_writer, model_reader, model_writer):
     """
     Attach raw stream endpoints to the interface and model objects.
-    Cross-connect so messages flow only between interface and model.
+    Each gets its own reader/writer pair, not cross-connected.
     """
-    # Interface reads from model, writes to model
-    interface.reader = model_reader
-    interface.writer = model_writer
-    # Model reads from interface, writes to interface
-    model.reader = interface_reader
-    model.writer = interface_writer
+    # Interface uses its own reader/writer for CLI<->controller
+    interface.reader = interface_reader
+    interface.writer = interface_writer
+    # Model uses its own reader/writer for controller<->model
+    model.reader = model_reader
+    model.writer = model_writer
 
 async def pump(src_reader, dst_writer):
     """
@@ -73,11 +73,11 @@ async def run_module(InterfaceCls, ModelCls):
     # 4) Start the model's run loop in the background
     model_task = asyncio.create_task(model.run())
 
-    # 5) Interface receives the model's capabilities message first
-    capabilities_msg = await interface.reader.readline()
+    capabilities_msg = await model_reader.readline()
     print("Controller received model capabilities:", capabilities_msg.decode().strip())
     await interface.setup_streams(interface_reader, interface_writer)
     await interface.run()
+
     # 6) Set up bidirectional pumps for ongoing communication (optional, legacy support)
     # If you want to pump raw bytes concurrently, uncomment below:
     # task_frontend = asyncio.create_task(pump(interface.reader, interface.writer))
