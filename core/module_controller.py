@@ -105,6 +105,13 @@ class ModuleController:
             if self.model is not None:
                 self.model.reader = self.model_reader
                 self.model.writer = self.model_writer
+
+            # Interface expects a capabilities message from model before continuing
+            if hasattr(self.interface_reader, "readline"):
+                capabilities_msg = await self.interface_reader.readline()
+                logger.info(f"Controller received model capabilities: {capabilities_msg.decode().strip()}")
+                if hasattr(self.interface, "setup_streams"):
+                    await self.interface.setup_streams(self.interface_reader, self.interface_writer)
              
             # Create socket pairs for bidirectional communication
 #           sock1, sock2 = socket.socketpair()            
