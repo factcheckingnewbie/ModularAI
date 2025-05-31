@@ -206,7 +206,7 @@ class GPT2Model:
             bool: True if exited normally, False if error occurred
         """
         if not self.reader or not self.writer:
-            #logger.error("Error: Streams not set")
+            logger.error("Error: Streams not set")
             return False
         
         # Set running flag    
@@ -468,7 +468,7 @@ class GPT2Model:
         
         # If critical error, initiate shutdown
         if is_critical:
-            #logger.critical(f"Critical error: {error_message}")
+            logger.critical(f"Critical error: {error_message}")
             await self.notify_controller_error(error_message)
             asyncio.create_task(self.shutdown())
     
@@ -543,7 +543,7 @@ class GPT2Model:
             response: Dictionary containing the response data
         """
         if not self.writer:
-            #logger.error("Error: Writer not set")
+            logger.error("Error: Writer not set")
             return
             
         try:
@@ -562,7 +562,7 @@ class GPT2Model:
     
     async def shutdown(self) -> None:
         """Shutdown the model gracefully."""
-        #logger.info("Shutting down model")
+        logger.info("Shutting down model")
         self.running = False
         
         # Cancel all pending tasks
