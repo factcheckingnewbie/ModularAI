@@ -1,21 +1,8 @@
-import datetime
-import os
 import asyncio
 import json
 import sys
 import os
 from asyncio import StreamReader, StreamWriter
-import logging
-# Set up logging to file in module's own directory with invocation timestamp
-log_dir = os.path.dirname(__file__)
-log_filename = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".log"
-log_path = os.path.join(log_dir, log_filename)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
-    handlers=[logging.FileHandler(log_path), logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
 
 
 class Cli_Chat:
@@ -34,8 +21,6 @@ class Cli_Chat:
 #        self.prompt_symbol = "> "
         self.prompt_symbol = prompt_symbol
         self.tasks = set()
-       
-        self.logger.debug(f"Initialized Cli_Chat: id={id(self)}, reader={getattr(self, 'reader', None)}, writer={getattr(self, 'writer', None)}")
         
     def get_interface_id(self):
         """Return the interface ID for compatibility checking."""
@@ -220,7 +205,6 @@ class Cli_Chat:
         Continuously receive and display messages from AI models.
         Non-blocking implementation.
         """
-
         try:
             reading_tasks = {}
             while self.running:
