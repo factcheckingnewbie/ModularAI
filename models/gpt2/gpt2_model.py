@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GPT-2 based AI model for the ModdularAI framework.
 
@@ -15,6 +14,7 @@ import datetime
 import asyncio
 import json
 import logging
+import traceback
 from asyncio import StreamReader, StreamWriter, CancelledError, TimeoutError
 from typing import Dict, Any, Optional, Tuple
 
@@ -208,66 +208,113 @@ class GPT2Model:
         if not self.reader or not self.writer:
             logger.error("Error: Streams not set")
             return False
-        
-        # Set running flag    
         self.running = True
-            
         try:
-            # First, advertise capabilities
             await self.advertise_capabilities()
-            
-            # Process incoming messages
             while self.running and not self.reader.at_eof():
                 try:
-                    # Read a line with timeout
+                    logger.debug("GPT2Model.run: about to await self.reader.readline() (id=%r), task=%r", id(self.reader), asyncio.current_task())
+                    logger.debug("Stack:\n%s", "".join(traceback.format_stack()))
                     try:
-                        # Use wait_for to implement timeout
                         data = await asyncio.wait_for(
                             self.reader.readline(),
                             timeout=self.config.get("request_timeout", 30)
                         )
+                        logger.debug("GPT2Model.run: received data from self.reader.readline(): %r", data)
                     except TimeoutError:
-                        # No data received within timeout, but connection still alive
                         continue
-                    
                     if not data:
-                        # EOF reached
                         logger.info("End of stream reached")
                         break
-                        
-                    # Process request in a separate task to avoid blocking the main loop
+                    logger.debug("GPT2Model.run: about to create process_request task for data: %r", data)
                     task = asyncio.create_task(self.process_request(data))
+                    logger.debug("GPT2Model.run: created process_request task: %r", task)
                     self.tasks.add(task)
                     task.add_done_callback(self.tasks.discard)
-                    
                 except CancelledError:
-                    # Handle cancellation
                     logger.info("Model processing loop cancelled")
                     break
                 except Exception as e:
-                    logger.error(f"Error in model run loop: {e}", exc_info=True)
-                    # Continue processing other requests
+                    logger.error("Error in model run loop: %r\nStack:\n%s", e, "".join(traceback.format_stack()), exc_info=True)
                     continue
-                    
             return True
-            
         except Exception as e:
-            logger.error(f"Fatal error in run loop: {e}", exc_info=True)
+            logger.error("Fatal error in run loop: %r\nStack:\n%s", e, "".join(traceback.format_stack()), exc_info=True)
             return False
         finally:
             self.running = False
-            # Cancel all pending tasks
             for task in self.tasks:
                 if not task.done():
                     task.cancel()
-            
-            # Wait for tasks to complete
             if self.tasks:
                 try:
                     await asyncio.gather(*self.tasks, return_exceptions=True)
                 except Exception as e:
-                    logger.error(f"Error waiting for tasks to complete: {e}", exc_info=True)
+                    logger.error("Error waiting for tasks to complete: %r\nStack:\n%s", e, "".join(traceback.format_stack()), exc_info=True)
             logger.info("Model processing loop ended")
+#        if not self.reader or not self.writer:
+#            logger.error("Error: Streams not set")
+#            return False
+#        
+#        # Set running flag    
+#        self.running = True
+#            
+#        try:
+#            # First, advertise capabilities
+#            await self.advertise_capabilities()
+#            
+#            # Process incoming messages
+#            while self.running and not self.reader.at_eof():
+#                try:
+#                    # Read a line with timeout
+#                    try:
+#                        # Use wait_for to implement timeout
+#                        data = await asyncio.wait_for(
+#                            self.reader.readline(),
+#                            timeout=self.config.get("request_timeout", 30)
+#                        )
+#                    except TimeoutError:
+#                        # No data received within timeout, but connection still alive
+#                        continue
+#                    
+#                    if not data:
+#                        # EOF reached
+#                        logger.info("End of stream reached")
+#                        break
+#                        
+#                    # Process request in a separate task to avoid blocking the main loop
+#                    task = asyncio.create_task(self.process_request(data))
+#                    self.tasks.add(task)
+#                    task.add_done_callback(self.tasks.discard)
+#                    
+#                except CancelledError:
+#                    # Handle cancellation
+#                    logger.info("Model processing loop cancelled")
+#                    break
+#                except Exception as e:
+#                    logger.error(f"Error in model run loop: {e}", exc_info=True)
+#                    # Continue processing other requests
+#                    continue
+#                    
+#            return True
+#            
+#        except Exception as e:
+#            logger.error(f"Fatal error in run loop: {e}", exc_info=True)
+#            return False
+#        finally:
+#            self.running = False
+#            # Cancel all pending tasks
+#            for task in self.tasks:
+#                if not task.done():
+#                    task.cancel()
+#            
+#            # Wait for tasks to complete
+#            if self.tasks:
+#                try:
+#                    await asyncio.gather(*self.tasks, return_exceptions=True)
+#                except Exception as e:
+#                    logger.error(f"Error waiting for tasks to complete: {e}", exc_info=True)
+#            logger.info("Model processing loop ended")
     
     async def process_request(self, data: bytes) -> None:
         """

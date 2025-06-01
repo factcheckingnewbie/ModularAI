@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Mediator between module and interface.
 
@@ -11,6 +10,7 @@ Features:
 import asyncio
 import json
 import logging
+import traceback
 import socket
 from asyncio import StreamReader, StreamWriter, CancelledError
 from typing import Dict, Any, Optional, Tuple, Set
@@ -228,57 +228,101 @@ class ModuleController:
         Continuously relay messages from model to interface.
         Non-blocking implementation using asyncio.
         """
+
         try:
+            import traceback
             logger.info("Starting relay from model to interface")
-            # Ensure only one coroutine ever reads from model_reader at a time
             self._relay_model_reader_lock = getattr(self, "_relay_model_reader_lock", None) or asyncio.Lock()
-            
             while self.running and not self.model_reader.at_eof():
                 try:
+                    logger.debug("relay_to_interface: waiting to acquire _relay_model_reader_lock (id=%r)", id(self.model_reader))
                     async with self._relay_model_reader_lock:
+                        logger.debug("relay_to_interface: acquired lock, about to await model_reader.readline() (id=%r), task=%r", id(self.model_reader), asyncio.current_task())
+                        logger.debug("Stack:\n%s", "".join(traceback.format_stack()))
                         data = await self.model_reader.readline()
+                        logger.debug("relay_to_interface: received data from model_reader.readline(): %r", data)
                     if not data:
                         logger.info("Model EOF received")
                         self.running = False  # Signal other tasks to terminate
-                        # Signal EOF to the other end
                         if not self.interface_writer.is_closing():
                             self.interface_writer.close()
                         break
-                        
-                    # Parse and handle controller messages
                     try:
                         message = json.loads(data.decode('utf-8'))
-                        
-                        # Check for controller notifications
                         if isinstance(message, dict) and message.get("message_type") == "controller_notification":
                             await self.handle_controller_notification(message)
-                            # Skip forwarding to interface if it's controller-specific
                             if message.get("notification_type") in ["controller_only"]:
                                 continue
                     except json.JSONDecodeError:
-                        # Not JSON, pass through
                         pass
-                    
-                    # Write to interface
                     if not self.interface_writer.is_closing():
+                        logger.debug("relay_to_interface: writing data to interface_writer: %r", data)
                         self.interface_writer.write(data)
                         await self.interface_writer.drain()
                     else:
                         logger.warning("Interface writer closed, can't send data")
                         break
-                    
                 except asyncio.CancelledError:
                     logger.info("Model relay task cancelled")
                     break
                 except Exception as e:
-                    logger.error(f"Error relaying to interface: {e}", exc_info=True)
-                    # Try to continue if possible
+                    logger.error("Error relaying to interface: %r\nStack:\n%s", e, "".join(traceback.format_stack()), exc_info=True)
                     await asyncio.sleep(0.1)
-                    
         except Exception as e:
-            logger.error(f"Fatal error in model relay: {e}", exc_info=True)
+            logger.error("Fatal error in model relay: %r\nStack:\n%s", e, "".join(traceback.format_stack()), exc_info=True)
         finally:
             logger.info("Model to interface relay ended")
+#        try:
+#            logger.info("Starting relay from model to interface")
+#            # Ensure only one coroutine ever reads from model_reader at a time
+#            self._relay_model_reader_lock = getattr(self, "_relay_model_reader_lock", None) or asyncio.Lock()
+#            
+#            while self.running and not self.model_reader.at_eof():
+#                try:
+#                    async with self._relay_model_reader_lock:
+#                        data = await self.model_reader.readline()
+#                    if not data:
+#                        logger.info("Model EOF received")
+#                        self.running = False  # Signal other tasks to terminate
+#                        # Signal EOF to the other end
+#                        if not self.interface_writer.is_closing():
+#                            self.interface_writer.close()
+#                        break
+#                        
+#                    # Parse and handle controller messages
+#                    try:
+#                        message = json.loads(data.decode('utf-8'))
+#                        
+#                        # Check for controller notifications
+#                        if isinstance(message, dict) and message.get("message_type") == "controller_notification":
+#                            await self.handle_controller_notification(message)
+#                            # Skip forwarding to interface if it's controller-specific
+#                            if message.get("notification_type") in ["controller_only"]:
+#                                continue
+#                    except json.JSONDecodeError:
+#                        # Not JSON, pass through
+#                        pass
+#                    
+#                    # Write to interface
+#                    if not self.interface_writer.is_closing():
+#                        self.interface_writer.write(data)
+#                        await self.interface_writer.drain()
+#                    else:
+#                        logger.warning("Interface writer closed, can't send data")
+#                        break
+#                    
+#                except asyncio.CancelledError:
+#                    logger.info("Model relay task cancelled")
+#                    break
+#                except Exception as e:
+#                    logger.error(f"Error relaying to interface: {e}", exc_info=True)
+#                    # Try to continue if possible
+#                    await asyncio.sleep(0.1)
+#                    
+#        except Exception as e:
+#            logger.error(f"Fatal error in model relay: {e}", exc_info=True)
+#        finally:
+#            logger.info("Model to interface relay ended")
     
     async def handle_controller_notification(self, notification: Dict[str, Any]) -> None:
         """
