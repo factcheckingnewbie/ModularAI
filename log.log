@@ -16,27 +16,27 @@ Available AI Models:
 --------------------
 1. GPT-2 Model - GPT-3 based AI model for text generation
 
-Select a model (number): Exception ignored in: <function StreamWriter.__del__ at 0x7f60ae0e99e0>
+Select a model (number): Exception ignored in: <function StreamWriter.__del__ at 0x7f43374e19e0>
 Traceback (most recent call last):
   File "/usr/lib64/python3.13/asyncio/streams.py", line 405, in __del__
     if not self._transport.is_closing():
 AttributeError: 'StreamWriter' object has no attribute '_transport'
-2025-06-01 13:02:13,350 INFO:core.module_controller:Connecting to interface: Cli_Chat
-2025-06-01 13:02:13,351 INFO:core.module_controller:Connecting to model: GPT2Model
-2025-06-01 13:02:13,351 INFO:core.module_controller:Model compatibility: Compatible with controller
-2025-06-01 13:02:13,351 INFO:core.module_controller:Establishing communication streams
-2025-06-01 13:02:13,351 INFO:models.gpt2.gpt2_model:Sending capabilities handshake
-2025-06-01 13:02:13,352 INFO:models.gpt2.gpt2_model:Sent capabilities handshake
-2025-06-01 13:02:13,352 INFO:models.gpt2.gpt2_model:Ready to operate: Streams and handshake complete
-2025-06-01 13:02:13,352 INFO:models.gpt2.gpt2_model:Sent capability information   
-2025-06-01 13:02:13,354 INFO:core.module_controller:Controller received model capabilities: {"message_type": "capabilities", "protocol_version": "1.0.0", "capabilities": {"text_io": true, "structured_output": false, "language_understanding": true}}
-2025-06-01 13:02:13,355 INFO:models.gpt2.gpt2_model:Streams received: reader=<StreamReader waiter=<Future pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=8 read=polling write=<idle, bufsize=0>>>, writer=<StreamWriter transport=<_SelectorSocketTransport fd=8 read=polling write=<idle, bufsize=0>> reader=<StreamReader waiter=<Future pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=8 read=polling write=<idle, bufsize=0>>>>
-2025-06-01 13:02:13,355 INFO:core.module_controller:Communication streams established successfully
-2025-06-01 13:02:13,355 INFO:core.module_controller:Compatibility check passed: Compatible, but missing optional capabilities: structured_output
-2025-06-01 13:02:13,355 INFO:core.module_controller:Mediation started successfully
-2025-06-01 13:02:13,355 INFO:core.module_controller:Starting relay from interface to model
-2025-06-01 13:02:13,355 INFO:core.module_controller:Starting relay from model to interface
-2025-06-01 13:02:13,356 ERROR:core.module_controller:Error relaying to interface: RuntimeError('readuntil() called while another coroutine is already waiting for incoming data')
+2025-06-01 13:01:29,545 INFO:core.module_controller:Connecting to interface: Cli_Chat
+2025-06-01 13:01:29,546 INFO:core.module_controller:Connecting to model: GPT2Model
+2025-06-01 13:01:29,546 INFO:core.module_controller:Model compatibility: Compatible with controller
+2025-06-01 13:01:29,546 INFO:core.module_controller:Establishing communication streams
+2025-06-01 13:01:29,546 INFO:models.gpt2.gpt2_model:Sending capabilities handshake
+2025-06-01 13:01:29,547 INFO:models.gpt2.gpt2_model:Sent capabilities handshake
+2025-06-01 13:01:29,547 INFO:models.gpt2.gpt2_model:Ready to operate: Streams and handshake complete
+2025-06-01 13:01:29,547 INFO:models.gpt2.gpt2_model:Sent capability information   
+2025-06-01 13:01:29,549 INFO:core.module_controller:Controller received model capabilities: {"message_type": "capabilities", "protocol_version": "1.0.0", "capabilities": {"text_io": true, "structured_output": false, "language_understanding": true}}
+2025-06-01 13:01:29,550 INFO:models.gpt2.gpt2_model:Streams received: reader=<StreamReader waiter=<Future pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=8 read=polling write=<idle, bufsize=0>>>, writer=<StreamWriter transport=<_SelectorSocketTransport fd=8 read=polling write=<idle, bufsize=0>> reader=<StreamReader waiter=<Future pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=8 read=polling write=<idle, bufsize=0>>>>
+2025-06-01 13:01:29,550 INFO:core.module_controller:Communication streams established successfully
+2025-06-01 13:01:29,550 INFO:core.module_controller:Compatibility check passed: Compatible, but missing optional capabilities: structured_output
+2025-06-01 13:01:29,550 INFO:core.module_controller:Mediation started successfully
+2025-06-01 13:01:29,550 INFO:core.module_controller:Starting relay from interface to model
+2025-06-01 13:01:29,550 INFO:core.module_controller:Starting relay from model to interface
+2025-06-01 13:01:29,552 ERROR:core.module_controller:Error relaying to interface: RuntimeError('readuntil() called while another coroutine is already waiting for incoming data')
 Stack:
   File "/home/ptr/Developement/guided/ModularAI/module_manager.py", line 521, in <module>
     asyncio.run(main())
@@ -68,11 +68,11 @@ Traceback (most recent call last):
         f'{func_name}() called while another coroutine is '
         f'already waiting for incoming data')
 RuntimeError: readuntil() called while another coroutine is already waiting for incoming data
-2025-06-01 13:02:13,358 INFO:core.module_controller:Interface relay task cancelled
-2025-06-01 13:02:13,358 INFO:core.module_controller:Interface to model relay ended
-2025-06-01 13:02:13,359 INFO:core.module_controller:Model to interface relay ended
-2025-06-01 13:02:13,359 INFO:models.gpt2.gpt2_model:Model processing loop cancelled
-2025-06-01 13:02:13,359 INFO:models.gpt2.gpt2_model:Model processing loop ended
+2025-06-01 13:01:29,554 INFO:core.module_controller:Interface relay task cancelled
+2025-06-01 13:01:29,554 INFO:core.module_controller:Interface to model relay ended
+2025-06-01 13:01:29,554 INFO:core.module_controller:Model to interface relay ended
+2025-06-01 13:01:29,554 INFO:models.gpt2.gpt2_model:Model processing loop cancelled
+2025-06-01 13:01:29,554 INFO:models.gpt2.gpt2_model:Model processing loop ended
 
 Selected model: GPT-2 Model
 
