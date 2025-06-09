@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Diff against main
-        run: git fetch origin main && git diff origin/main...HEAD > copilot.patch
+        run: git fetch origin main && git diff origin/testing...HEAD > copilot.patch
 
       - name: Ensure patch applies cleanly
         run: git apply --check copilot.patch
