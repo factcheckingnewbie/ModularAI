@@ -38,6 +38,8 @@ class ModuleController:
         self.model_writer = None
         self.running = False
         self.tasks = set()
+        self.model_queue = None
+        self._model_reader_task = None
     
     async def connect_interface(self, interface) -> bool:
         """

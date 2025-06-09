@@ -10,6 +10,7 @@ import asyncio
 import socket
 import logging
 
+
 async def create_streams():
     """
     Create paired socket streams and return:
@@ -20,9 +21,10 @@ async def create_streams():
     model_reader, interface_writer = await asyncio.open_connection(sock=sock_b)
     return interface_reader, interface_writer, model_reader, model_writer
 
-def wire_components(interface, model,
-                    interface_reader, interface_writer,
-                    model_reader, model_writer):
+
+def wire_components(
+    interface, model, interface_reader, interface_writer, model_reader, model_writer
+):
     """
     Attach raw stream endpoints to the interface and model objects.
     - interface.reader/writer communicate with the front end (e.g. CLI)
@@ -38,6 +40,7 @@ def wire_components(interface, model,
     model.frontend_reader = interface_reader
     model.frontend_writer = interface_writer
 
+
 async def pump(src_reader, dst_writer):
     """
     Generic raw‐byte pump: read chunks from src_reader and write them to dst_writer.
@@ -52,6 +55,7 @@ async def pump(src_reader, dst_writer):
     except asyncio.CancelledError:
         pass
 
+
 async def run_module(InterfaceCls, ModelCls):
     """
     Instantiate and wire up frontend interface & backend model, then shuttle raw data.
@@ -65,21 +69,21 @@ async def run_module(InterfaceCls, ModelCls):
     print("✅ Model loaded.\n")
 
     # 2) Build raw streams
-    interface_reader, interface_writer, model_reader, model_writer = await create_streams()
+    interface_reader, interface_writer, model_reader, model_writer = (
+        await create_streams()
+    )
 
     # 3) Instantiate frontend and attach streams
     interface = InterfaceCls()
-    wire_components(interface, model,
-                    interface_reader, interface_writer,
-                    model_reader, model_writer)
+    wire_components(
+        interface, model, interface_reader, interface_writer, model_reader, model_writer
+    )
 
     # 4) Set up bidirectional pumps
     task_frontend = asyncio.create_task(
         pump(interface.reader, interface.backend_writer)
     )
-    task_backend = asyncio.create_task(
-        pump(model.reader, model.frontend_writer)
-    )
+    task_backend = asyncio.create_task(pump(model.reader, model.frontend_writer))
 
     # 5) Wait until one side closes, then cancel the other
     done, pending = await asyncio.wait(
@@ -91,4 +95,3 @@ async def run_module(InterfaceCls, ModelCls):
     await asyncio.gather(*pending, return_exceptions=True)
 
     print("👋 Goodbye!")
-

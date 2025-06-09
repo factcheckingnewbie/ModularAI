@@ -10,6 +10,7 @@ import asyncio
 import socket
 import logging
 
+
 async def create_streams():
     """
     Create paired socket streams and return:
@@ -23,7 +24,10 @@ async def create_streams():
     model_reader, model_writer = await asyncio.open_connection(sock=sock_b)
     return interface_reader, interface_writer, model_reader, model_writer
 
-def wire_components(interface, model, interface_reader, interface_writer, model_reader, model_writer):
+
+def wire_components(
+    interface, model, interface_reader, interface_writer, model_reader, model_writer
+):
     """
     Attach raw stream endpoints to the interface and model objects.
     Each gets its own reader/writer pair, not cross-connected.
@@ -34,6 +38,8 @@ def wire_components(interface, model, interface_reader, interface_writer, model_
     # Model uses its own reader/writer for controller<->model
     model.reader = model_reader
     model.writer = model_writer
+
+
 async def pump(src_reader, dst_writer):
     """
     Generic raw‐byte pump: read chunks from src_reader and write them to dst_writer.
@@ -48,6 +54,7 @@ async def pump(src_reader, dst_writer):
     except asyncio.CancelledError:
         pass
 
+
 async def run_module(InterfaceCls, ModelCls):
     """
     Instantiate and wire up frontend interface & backend model, then shuttle raw data.
@@ -61,13 +68,15 @@ async def run_module(InterfaceCls, ModelCls):
     print("✅ Model loaded.\n")
 
     # 2) Build raw streams
-    interface_reader, interface_writer, model_reader, model_writer = await create_streams()
+    interface_reader, interface_writer, model_reader, model_writer = (
+        await create_streams()
+    )
 
     # 3) Instantiate frontend and attach streams
     interface = InterfaceCls()
-    wire_components(interface, model,
-                    interface_reader, interface_writer,
-                    model_reader, model_writer)
+    wire_components(
+        interface, model, interface_reader, interface_writer, model_reader, model_writer
+    )
 
     # 4) Start the model's run loop in the background
     model_task = asyncio.create_task(model.run())
